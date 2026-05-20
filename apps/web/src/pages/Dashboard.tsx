@@ -5,10 +5,10 @@ import { getPhaseGuidance } from '@nurturing/core'
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
 
 const phaseColors: Record<CyclePhase, string> = {
-  menstrual: 'bg-red-50 border-red-200 text-red-800',
-  follicular: 'bg-green-50 border-green-200 text-green-800',
-  ovulatory: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  luteal: 'bg-purple-50 border-purple-200 text-purple-800',
+  menstrual: 'bg-[#fff0eb] border-[#e8b7a6] text-[#7a3324]',
+  follicular: 'bg-[#edf8f2] border-[#b7d4c8] text-[#1c5948]',
+  ovulatory: 'bg-[#fff8e6] border-[#e4d0a0] text-[#7e5a13]',
+  luteal: 'bg-[#f4efe8] border-[#d5c8b6] text-[#654e2e]',
 }
 
 const phaseEmoji: Record<CyclePhase, string> = {
@@ -36,24 +36,24 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       <div>
-        <h1 className="text-2xl font-semibold text-stone-800">Good day 👋</h1>
-        <p className="text-stone-500 text-sm mt-1">Here's your daily overview.</p>
+        <h1 className="text-4xl font-semibold">Good day, Lucie.</h1>
+        <p className="text-[var(--muted)] text-sm mt-1">Your cycle-aware wellness board for today.</p>
       </div>
 
       {/* Phase card */}
       {phaseData ? (
-        <div className={`rounded-2xl border p-5 ${phaseColors[phaseData.phase]}`}>
+        <div className={`panel rounded-3xl border p-6 ${phaseColors[phaseData.phase]}`}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl">{phaseEmoji[phaseData.phase]}</span>
+            <span className="text-3xl">{phaseEmoji[phaseData.phase]}</span>
             <div>
               <p className="text-xs font-medium uppercase tracking-widest opacity-70">Current phase</p>
-              <p className="text-lg font-semibold capitalize">{phaseData.phase}</p>
+              <p className="text-2xl font-semibold capitalize [font-family:var(--heading-font)]">{phaseData.phase}</p>
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 mt-4">
+          <div className="grid sm:grid-cols-2 gap-5 mt-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-70">Food focus</p>
               <ul className="space-y-1">
@@ -76,16 +76,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <p className="text-xs mt-4 opacity-60 italic">{phaseData.disclaimer}</p>
+          <p className="text-xs mt-5 opacity-70 italic">{phaseData.disclaimer}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 text-stone-500 text-sm">
+        <div className="panel rounded-2xl p-5 text-[var(--muted)] text-sm">
           {phaseError ?? 'Loading phase data…'}
         </div>
       )}
 
       {/* Quick links */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { href: '/food', label: 'Log food', icon: '🥗' },
           { href: '/workouts', label: 'Log workout', icon: '💪' },
@@ -94,10 +94,10 @@ export default function Dashboard() {
           <a
             key={href}
             href={href}
-            className="flex flex-col items-center gap-2 rounded-xl bg-white border border-stone-200 p-4 hover:border-rose-300 hover:bg-rose-50 transition-colors"
+            className="panel flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-2 rounded-xl p-4 hover:translate-y-[-2px] transition"
           >
             <span className="text-2xl">{icon}</span>
-            <span className="text-xs font-medium text-stone-600">{label}</span>
+            <span className="text-xs font-medium text-[var(--ink)]">{label}</span>
           </a>
         ))}
       </div>

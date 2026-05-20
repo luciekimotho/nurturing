@@ -65,44 +65,44 @@ export default function WorkoutLog() {
   const intensityColor = { low: 'bg-green-100 text-green-700', moderate: 'bg-yellow-100 text-yellow-700', high: 'bg-red-100 text-red-700' }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       <div>
-        <h1 className="text-2xl font-semibold text-stone-800">Workouts</h1>
+        <h1 className="text-4xl font-semibold">Workouts</h1>
         {logs.length > 0 && (
-          <p className="text-stone-500 text-sm mt-1">{totalMinutes} min logged</p>
+          <p className="text-[var(--muted)] text-sm mt-1">{totalMinutes} min logged</p>
         )}
       </div>
 
       {/* Add workout form */}
-      <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-        <h2 className="font-medium text-stone-700">Log a workout</h2>
+      <form onSubmit={handleSubmit} className="panel p-5 space-y-4">
+        <h2 className="text-xl font-medium">Log a workout</h2>
 
         <div className="grid sm:grid-cols-3 gap-3">
           <div className="sm:col-span-1">
-            <label className="block text-xs font-medium text-stone-600 mb-1">Workout type *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Workout type *</label>
             <input
               name="type" value={form.type} onChange={handleChange}
               placeholder="e.g. Running, Yoga"
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             />
             {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Duration (min) *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Duration (min) *</label>
             <input
               name="durationMinutes" value={form.durationMinutes} onChange={handleChange}
               type="number" min="1" placeholder="30"
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             />
             {errors.durationMinutes && <p className="text-xs text-red-500 mt-1">{errors.durationMinutes}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Intensity *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Intensity *</label>
             <select
               name="intensityLevel" value={form.intensityLevel} onChange={handleChange}
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             >
               {intensityLevels.map((i) => <option key={i} value={i}>{i}</option>)}
             </select>
@@ -110,18 +110,18 @@ export default function WorkoutLog() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-stone-600 mb-1">Notes</label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1">Notes</label>
           <textarea
             name="notes" value={form.notes} onChange={handleChange}
             placeholder="How did it feel?"
             rows={2}
-            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 resize-none"
+            className="field resize-none"
           />
         </div>
 
         <button
           type="submit" disabled={submitting}
-          className="w-full sm:w-auto px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="primary-btn w-full sm:w-auto"
         >
           {submitting ? 'Saving…' : 'Log workout'}
         </button>
@@ -129,14 +129,14 @@ export default function WorkoutLog() {
 
       {/* Log list */}
       {logs.length === 0 ? (
-        <p className="text-stone-400 text-sm text-center py-8">No workouts logged yet.</p>
+        <p className="text-[var(--muted)] text-sm text-center py-8">No workouts logged yet.</p>
       ) : (
         <div className="space-y-2">
           {logs.map((log) => (
-            <div key={log.id} className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3">
+            <div key={log.id} className="panel flex items-center justify-between rounded-xl px-4 py-3">
               <div>
-                <p className="font-medium text-stone-800 text-sm">{log.type}</p>
-                <p className="text-xs text-stone-400">
+                <p className="font-medium text-[var(--ink)] text-sm">{log.type}</p>
+                <p className="text-xs text-[var(--muted)]">
                   {log.durationMinutes} min ·{' '}
                   <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${intensityColor[log.intensityLevel]}`}>
                     {log.intensityLevel}
@@ -144,7 +144,7 @@ export default function WorkoutLog() {
                   {log.notes && ` · ${log.notes}`}
                 </p>
               </div>
-              <button onClick={() => handleDelete(log.id)} className="text-stone-300 hover:text-red-400 transition-colors text-lg leading-none">×</button>
+              <button onClick={() => handleDelete(log.id)} className="text-[#b08f76] hover:text-[#8f2f1e] transition-colors text-lg leading-none">×</button>
             </div>
           ))}
         </div>

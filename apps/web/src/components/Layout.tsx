@@ -9,12 +9,13 @@ const navItems = [
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
+    <div className="min-h-screen flex flex-col page-enter relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_20%,rgba(182,73,47,0.16)_0,transparent_36%),radial-gradient(circle_at_78%_24%,rgba(31,106,88,0.18)_0,transparent_30%)]" />
       {/* Top nav */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <span className="font-semibold text-stone-800 text-lg tracking-tight">nurturing</span>
-          <nav className="flex gap-1">
+      <header className="sticky top-0 z-10 backdrop-blur-sm border-b border-[var(--line)]/70 bg-[#f8f2e8]/85">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="font-semibold text-[var(--ink)] text-2xl tracking-tight [font-family:var(--heading-font)]">Nurturing</span>
+          <nav className="flex gap-1 p-1 rounded-xl bg-white/65 border border-[var(--line)]">
             {navItems.map(({ to, label, icon }) => (
               <NavLink
                 key={to}
@@ -22,8 +23,8 @@ export default function Layout() {
                 className={({ isActive }) =>
                   `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-rose-50 text-rose-700'
-                      : 'text-stone-500 hover:text-stone-800 hover:bg-stone-100'
+                      ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
+                      : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[#f1e7d8]'
                   }`
                 }
               >
@@ -36,7 +37,7 @@ export default function Layout() {
       </header>
 
       {/* Page content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6">
+      <main className="relative z-1 flex-1 max-w-4xl mx-auto w-full px-4 py-8">
         <Outlet />
       </main>
     </div>

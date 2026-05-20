@@ -75,46 +75,46 @@ export default function CycleTracking() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       <div>
-        <h1 className="text-2xl font-semibold text-stone-800">Cycle Tracking</h1>
-        <p className="text-stone-500 text-sm mt-1">Log your period and symptoms.</p>
+        <h1 className="text-4xl font-semibold">Cycle Tracking</h1>
+        <p className="text-[var(--muted)] text-sm mt-1">Log your period and symptoms.</p>
       </div>
 
       {/* Log period form */}
-      <form onSubmit={handleCycleSubmit} className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-        <h2 className="font-medium text-stone-700">Log a period</h2>
+      <form onSubmit={handleCycleSubmit} className="panel p-5 space-y-4">
+        <h2 className="text-xl font-medium">Log a period</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Period start *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Period start *</label>
             <input
               type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)}
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             />
             {cycleErrors.periodStart && <p className="text-xs text-red-500 mt-1">{cycleErrors.periodStart}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Period end (optional)</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Period end (optional)</label>
             <input
               type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)}
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             />
           </div>
         </div>
         <button
           type="submit" disabled={submittingCycle}
-          className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="primary-btn"
         >
           {submittingCycle ? 'Saving…' : 'Save period'}
         </button>
       </form>
 
       {/* Log symptom form */}
-      <form onSubmit={handleSymptomSubmit} className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-        <h2 className="font-medium text-stone-700">Log a symptom</h2>
+      <form onSubmit={handleSymptomSubmit} className="panel p-5 space-y-4">
+        <h2 className="text-xl font-medium">Log a symptom</h2>
 
         <div>
-          <label className="block text-xs font-medium text-stone-600 mb-2">Quick select</label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-2">Quick select</label>
           <div className="flex flex-wrap gap-2">
             {commonSymptoms.map((s) => (
               <button
@@ -122,8 +122,8 @@ export default function CycleTracking() {
                 onClick={() => setSymptomType(s)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   symptomType === s
-                    ? 'bg-rose-100 border-rose-300 text-rose-700'
-                    : 'border-stone-200 text-stone-500 hover:border-rose-200 hover:text-rose-600'
+                    ? 'bg-[var(--brand-soft)] border-[#daa990] text-[var(--brand)]'
+                    : 'border-[var(--line)] text-[var(--muted)] hover:border-[#daa990] hover:text-[var(--brand)]'
                 }`}
               >
                 {s}
@@ -134,16 +134,16 @@ export default function CycleTracking() {
 
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Symptom *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Symptom *</label>
             <input
               value={symptomType} onChange={(e) => setSymptomType(e.target.value)}
               placeholder="Or type custom symptom"
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="field"
             />
             {symptomErrors.type && <p className="text-xs text-red-500 mt-1">{symptomErrors.type}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1">Severity (1–5) *</label>
+            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Severity (1-5) *</label>
             <div className="flex gap-2 mt-1">
               {([1, 2, 3, 4, 5] as const).map((n) => (
                 <button
@@ -151,8 +151,8 @@ export default function CycleTracking() {
                   onClick={() => setSymptomSeverity(n)}
                   className={`w-9 h-9 rounded-full text-sm font-medium border transition-colors ${
                     symptomSeverity === n
-                      ? 'bg-rose-600 border-rose-600 text-white'
-                      : 'border-stone-200 text-stone-500 hover:border-rose-300'
+                      ? 'bg-[var(--brand)] border-[var(--brand)] text-white'
+                      : 'border-[var(--line)] text-[var(--muted)] hover:border-[#daa990]'
                   }`}
                 >
                   {n}
@@ -164,7 +164,7 @@ export default function CycleTracking() {
 
         <button
           type="submit" disabled={submittingSymptom}
-          className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="primary-btn"
         >
           {submittingSymptom ? 'Saving…' : 'Log symptom'}
         </button>
@@ -173,15 +173,15 @@ export default function CycleTracking() {
       {/* Cycle history */}
       {cycleLogs.length > 0 && (
         <div>
-          <h2 className="font-medium text-stone-700 mb-2">Period history</h2>
+          <h2 className="text-lg font-medium mb-2">Period history</h2>
           <div className="space-y-2">
             {cycleLogs.map((log) => (
-              <div key={log.id} className="bg-white border border-stone-200 rounded-xl px-4 py-3 text-sm">
-                <span className="font-medium text-stone-700">
+              <div key={log.id} className="panel rounded-xl px-4 py-3 text-sm">
+                <span className="font-medium text-[var(--ink)]">
                   {new Date(log.periodStart).toLocaleDateString()}
                 </span>
                 {log.periodEnd && (
-                  <span className="text-stone-400"> → {new Date(log.periodEnd).toLocaleDateString()}</span>
+                  <span className="text-[var(--muted)]"> {'->'} {new Date(log.periodEnd).toLocaleDateString()}</span>
                 )}
               </div>
             ))}
@@ -192,14 +192,14 @@ export default function CycleTracking() {
       {/* Symptoms history */}
       {symptoms.length > 0 && (
         <div>
-          <h2 className="font-medium text-stone-700 mb-2">Recent symptoms</h2>
+          <h2 className="text-lg font-medium mb-2">Recent symptoms</h2>
           <div className="space-y-2">
             {symptoms.map((s) => (
-              <div key={s.id} className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3">
-                <span className="text-sm text-stone-700">{s.type}</span>
+              <div key={s.id} className="panel flex items-center justify-between rounded-xl px-4 py-3">
+                <span className="text-sm text-[var(--ink)]">{s.type}</span>
                 <div className="flex gap-0.5">
                   {([1, 2, 3, 4, 5] as const).map((n) => (
-                    <span key={n} className={`w-2.5 h-2.5 rounded-full ${n <= s.severity ? 'bg-rose-400' : 'bg-stone-100'}`} />
+                    <span key={n} className={`w-2.5 h-2.5 rounded-full ${n <= s.severity ? 'bg-[#cb5f45]' : 'bg-[#eadfce]'}`} />
                   ))}
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function CycleTracking() {
         </div>
       )}
 
-      <p className="text-xs text-stone-400 italic">
+      <p className="text-xs text-[var(--muted)] italic">
         This app provides general wellness information only, not medical advice.
       </p>
     </div>
