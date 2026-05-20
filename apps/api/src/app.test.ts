@@ -68,3 +68,27 @@ test("GET /api/cycle/phase rejects missing user header", async () => {
   assert.equal(res.status, 401);
   assert.equal(res.body.error, MISSING_USER_ID_ERROR.error);
 });
+
+test("POST /api/workouts saves when notes are omitted", async () => {
+  const authHeaders = { "x-user-id": "test-workout-no-notes-user" };
+
+  const createRes = await request(app)
+    .post("/api/workouts")
+    .set(authHeaders)
+    .send({
+      type: "Walk",
+      durationMinutes: 30,
+      intensityLevel: "low",
+      loggedAt: new Date().toISOString(),
+    });
+
+  if (!hasDatabaseUrl) {
+    assert.equal(createRes.status, 503);
+    assert.equal(createRes.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(createRes.status, 201);
+  assert.equal(createRes.body.type, "Walk");
+  assert.equal(createRes.body.durationMinutes, 30);
+});

@@ -9,9 +9,11 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [x] Phase 1 - Foundation complete (web + api scaffold, shared packages, tooling, initial repo setup)
 - [x] Phase 2 - Tracking MVP (initial) complete (food/workout/cycle/symptom flows + dashboard + phase display)
 - [x] Phase 2 - Tracking MVP hardening complete (Prisma/Postgres persistence + strict DB mode + API tests + header-based auth)
+- [x] Deploy auth milestone complete (Clerk sign-in/sign-up flow wired for web + API token verification mode)
+- [x] Workout logging robustness update complete (notes optional save path fixed and covered by API test)
 - [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
 - [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
-- [ ] Phase 5 - Deployment and release not started (Render + TestFlight/App Store)
+- [ ] Phase 5 - Deployment and release in progress (Render setup checklist pending)
 
 ## Architecture
 - apps/web: React + Vite + TypeScript + Tailwind
@@ -21,7 +23,17 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - packages/schemas: shared Zod schemas
 - Package manager: Yarn workspaces
 - Database: PostgreSQL
+- Authentication: Dual mode
+  - Local development: `header` mode using `x-user-id`
+  - Deployment target: `clerk` mode (web Clerk UI + API bearer token verification)
 - AI: Azure model APIs for calorie estimation and cycle-aware recommendations
+
+## Decisions Made
+- Name/package manager: Nurturing + Yarn workspaces
+- Persistence strategy: strict Postgres persistence (no in-memory fallback)
+- Local database strategy: isolated local Postgres cluster in repo on port `5433`
+- Auth strategy: Clerk for deployment, header auth for local dev speed
+- Current sequencing: web + API hardening first, then AI, then mobile, then release pipeline
 
 ## Feature Scope (v1)
 - Food tracking
@@ -80,7 +92,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Render for web/api/postgres
 - CI/CD and migration workflow
 - TestFlight and App Store release flow
-- Status: Not started
+- Status: In progress (auth-ready app and deployment checklist prepared; infra rollout pending)
 
 ## Deployment Checklist
 ### Render (Web + API)

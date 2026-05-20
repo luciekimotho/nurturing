@@ -38,6 +38,8 @@ workoutRouter.post("/", (req, res) => {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
+  const notes = result.data.notes?.trim();
+
   return prisma.workoutLog
     .create({
       data: {
@@ -45,7 +47,7 @@ workoutRouter.post("/", (req, res) => {
         type: result.data.type,
         durationMinutes: result.data.durationMinutes,
         intensityLevel: result.data.intensityLevel,
-        notes: result.data.notes,
+        ...(notes ? { notes } : {}),
         loggedAt: new Date(result.data.loggedAt),
       },
     })
