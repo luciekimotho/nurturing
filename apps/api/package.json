@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/apps/api/src/index.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "tsx --test src/**/*.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "migrate:deploy": "prisma migrate deploy && node dist/apps/api/src/index.js"
   },
   "dependencies": {
     "@clerk/express": "^2.1.19",

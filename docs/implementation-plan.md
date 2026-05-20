@@ -14,6 +14,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
 - [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
 - [ ] Phase 5 - Deployment and release in progress (Render setup checklist pending)
+- [ ] Phase 6 - UX research and improvement not started (rethink data input flows for food, workout, and cycle tracking)
 
 ## Architecture
 - apps/web: React + Vite + TypeScript + Tailwind
@@ -94,13 +95,23 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - TestFlight and App Store release flow
 - Status: In progress (auth-ready app and deployment checklist prepared; infra rollout pending)
 
+6. UX Research + Improvement
+- Audit current data input flows (food logging, workout logging, cycle/symptom entry)
+- Research how leading fitness, food tracking, and period apps handle input UX (e.g. quick-add patterns, inline pickers, swipe gestures, visual selectors)
+- Identify friction points and define improved interaction patterns
+- Redesign and rebuild input flows for web (and later mobile) based on findings
+- Status: Not started
+
 ## Deployment Checklist
 ### Render (Web + API)
-- [ ] Create staging services: web, api, postgres
-- [ ] Configure env vars and secrets
-- [ ] Run migrations on deploy
-- [ ] Add health checks and alerts
-- [ ] Promote to production after smoke tests
+- [x] Create `render.yaml` Blueprint (web static + api web service + postgres database defined)
+- [x] Fix API `start` script to correct compiled output path (`dist/apps/api/src/index.js`)
+- [x] Wire `prisma migrate deploy` into API start so migrations run on every deploy
+- [ ] Create services on Render dashboard using Blueprint (connect GitHub repo → New Blueprint)
+- [ ] Set secret env vars in Render dashboard: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_URL` (set to deployed API URL)
+- [ ] Trigger first deploy and verify `/health` endpoint responds
+- [ ] Smoke test all four flows (food, workout, cycle, symptom) on staging URL
+- [ ] Promote to production after smoke tests pass
 
 ### iOS (Expo + Apple)
 - [ ] Apple Developer/App Store Connect setup
