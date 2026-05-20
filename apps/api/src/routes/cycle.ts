@@ -24,7 +24,7 @@ cycleRouter.get("/", (_req, res) => {
         }))
       )
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to fetch cycle logs", error);
       return res.status(500).json({ error: "Failed to fetch cycle logs" });
     });
@@ -58,7 +58,7 @@ cycleRouter.post("/", (req, res) => {
         periodEnd: created.periodEnd?.toISOString(),
       })
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to create cycle log", error);
       return res.status(500).json({ error: "Failed to create cycle log" });
     });
@@ -87,7 +87,7 @@ cycleRouter.get("/phase", (_req, res) => {
         disclaimer: "This is general wellness information only, not medical advice.",
       });
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to fetch current cycle phase", error);
       return res.status(500).json({ error: "Failed to fetch current cycle phase" });
     });
@@ -120,7 +120,7 @@ cycleRouter.post("/symptoms", (req, res) => {
         date: created.date.toISOString(),
       })
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to create symptom", error);
       return res.status(500).json({ error: "Failed to create symptom" });
     });
@@ -144,7 +144,7 @@ cycleRouter.get("/symptoms", (_req, res) => {
         }))
       )
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to fetch symptoms", error);
       return res.status(500).json({ error: "Failed to fetch symptoms" });
     });

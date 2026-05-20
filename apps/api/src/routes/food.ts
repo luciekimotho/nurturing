@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { Prisma } from "@prisma/client";
 import { FoodLogSchema } from "@nurturing/schemas";
 import { DB_UNAVAILABLE_ERROR, prisma } from "../lib/prisma";
 
@@ -21,7 +22,7 @@ foodRouter.get("/", (_req, res) => {
         }))
       )
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to fetch food logs", error);
       res.status(500).json({ error: "Failed to fetch food logs" });
     });
@@ -57,7 +58,7 @@ foodRouter.post("/", (req, res) => {
         loggedAt: created.loggedAt.toISOString(),
       })
     )
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to create food log", error);
       res.status(500).json({ error: "Failed to create food log" });
     });
@@ -72,11 +73,11 @@ foodRouter.delete("/:id", (req, res) => {
 
   return prisma.foodLog
     .deleteMany({ where: { id: req.params.id, userId } })
-    .then((result) => {
+    .then((result: Prisma.BatchPayload) => {
       if (result.count === 0) return res.status(404).json({ error: "Not found" });
       return res.status(204).send();
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to delete food log", error);
       res.status(500).json({ error: "Failed to delete food log" });
     });
