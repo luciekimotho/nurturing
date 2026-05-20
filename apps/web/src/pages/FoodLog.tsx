@@ -20,9 +20,16 @@ export default function FoodLog() {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchLogs = () =>
-    fetch(`${API}/api/food`).then((r) => r.json()).then(setLogs)
+    fetch(`${API}/api/food`)
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load food logs')
+        return r.json()
+      })
+      .then(setLogs)
+      .catch(() => setRequestError('Could not load food logs. Check API connection.'))
 
   useEffect(() => { fetchLogs() }, [])
 
@@ -35,6 +42,7 @@ export default function FoodLog() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setRequestError(null)
     const payload = {
       name: form.name,
       calories: Number(form.calories),
@@ -51,19 +59,40 @@ export default function FoodLog() {
       return
     }
     setSubmitting(true)
-    await fetch(`${API}/api/food`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    setForm(emptyForm)
-    await fetchLogs()
-    setSubmitting(false)
+    try {
+      const res = await fetch(`${API}/api/food`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        setRequestError('Could not save meal. Please try again.')
+        return
+      }
+
+      setForm(emptyForm)
+      setErrors({})
+      await fetchLogs()
+    } catch {
+      setRequestError('Network issue while saving meal. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDelete(id: string) {
-    await fetch(`${API}/api/food/${id}`, { method: 'DELETE' })
-    setLogs((l) => l.filter((x) => x.id !== id))
+    setRequestError(null)
+    try {
+      const res = await fetch(`${API}/api/food/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setRequestError('Could not delete meal. Please try again.')
+        return
+      }
+      setLogs((l) => l.filter((x) => x.id !== id))
+    } catch {
+      setRequestError('Network issue while deleting meal. Please try again.')
+    }
   }
 
   return (
@@ -75,6 +104,7 @@ export default function FoodLog() {
             {totalCalories} kcal logged today
           </p>
         )}
+        {requestError && <p className="text-sm text-red-600 mt-2">{requestError}</p>}
       </div>
 
       {/* Add food form */}

@@ -18,9 +18,16 @@ export default function WorkoutLog() {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchLogs = () =>
-    fetch(`${API}/api/workouts`).then((r) => r.json()).then(setLogs)
+    fetch(`${API}/api/workouts`)
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load workout logs')
+        return r.json()
+      })
+      .then(setLogs)
+      .catch(() => setRequestError('Could not load workout logs. Check API connection.'))
 
   useEffect(() => { fetchLogs() }, [])
 
@@ -33,6 +40,7 @@ export default function WorkoutLog() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setRequestError(null)
     const payload = {
       type: form.type,
       durationMinutes: Number(form.durationMinutes),
@@ -47,19 +55,40 @@ export default function WorkoutLog() {
       return
     }
     setSubmitting(true)
-    await fetch(`${API}/api/workouts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    setForm(emptyForm)
-    await fetchLogs()
-    setSubmitting(false)
+    try {
+      const res = await fetch(`${API}/api/workouts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        setRequestError('Could not save workout. Please try again.')
+        return
+      }
+
+      setForm(emptyForm)
+      setErrors({})
+      await fetchLogs()
+    } catch {
+      setRequestError('Network issue while saving workout. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDelete(id: string) {
-    await fetch(`${API}/api/workouts/${id}`, { method: 'DELETE' })
-    setLogs((l) => l.filter((x) => x.id !== id))
+    setRequestError(null)
+    try {
+      const res = await fetch(`${API}/api/workouts/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setRequestError('Could not delete workout. Please try again.')
+        return
+      }
+      setLogs((l) => l.filter((x) => x.id !== id))
+    } catch {
+      setRequestError('Network issue while deleting workout. Please try again.')
+    }
   }
 
   const intensityColor = { low: 'bg-green-100 text-green-700', moderate: 'bg-yellow-100 text-yellow-700', high: 'bg-red-100 text-red-700' }
@@ -71,6 +100,7 @@ export default function WorkoutLog() {
         {logs.length > 0 && (
           <p className="text-[var(--muted)] text-sm mt-1">{totalMinutes} min logged</p>
         )}
+        {requestError && <p className="text-sm text-red-600 mt-2">{requestError}</p>}
       </div>
 
       {/* Add workout form */}

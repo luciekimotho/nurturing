@@ -1,17 +1,31 @@
 import { Router } from "express";
 import { CycleLogSchema, SymptomSchema } from "@nurturing/schemas";
 import { getCurrentPhase, getPhaseGuidance } from "@nurturing/core";
-import type { CycleLog, Symptom } from "@nurturing/core";
-import { randomUUID } from "crypto";
+import { DB_UNAVAILABLE_ERROR, prisma } from "../lib/prisma";
 
 export const cycleRouter = Router();
 
-const cycleLogs: CycleLog[] = [];
-const symptoms: Symptom[] = [];
-
 // Get all cycle logs
 cycleRouter.get("/", (_req, res) => {
-  res.json(cycleLogs);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.cycleLog
+    .findMany({ where: { userId: "demo" }, orderBy: { periodStart: "desc" } })
+    .then((rows) =>
+      res.json(
+        rows.map((r) => ({
+          ...r,
+          periodStart: r.periodStart.toISOString(),
+          periodEnd: r.periodEnd?.toISOString(),
+        }))
+      )
+    )
+    .catch((error) => {
+      console.error("Failed to fetch cycle logs", error);
+      return res.status(500).json({ error: "Failed to fetch cycle logs" });
+    });
 });
 
 // Log a new period start
@@ -20,32 +34,57 @@ cycleRouter.post("/", (req, res) => {
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
   }
-  const log: CycleLog = {
-    id: randomUUID(),
-    userId: "demo",
-    ...result.data,
-  };
-  cycleLogs.push(log);
-  res.status(201).json(log);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.cycleLog
+    .create({
+      data: {
+        userId: "demo",
+        periodStart: new Date(result.data.periodStart),
+        periodEnd: result.data.periodEnd ? new Date(result.data.periodEnd) : null,
+        cycleLength: result.data.cycleLength,
+      },
+    })
+    .then((created) =>
+      res.status(201).json({
+        ...created,
+        periodStart: created.periodStart.toISOString(),
+        periodEnd: created.periodEnd?.toISOString(),
+      })
+    )
+    .catch((error) => {
+      console.error("Failed to create cycle log", error);
+      return res.status(500).json({ error: "Failed to create cycle log" });
+    });
 });
 
 // Get current phase + guidance based on most recent period start
 cycleRouter.get("/phase", (_req, res) => {
-  if (cycleLogs.length === 0) {
-    return res.status(404).json({ error: "No cycle data logged yet" });
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
-  const latest = cycleLogs
-    .slice()
-    .sort((a, b) => new Date(b.periodStart).getTime() - new Date(a.periodStart).getTime())[0];
 
-  const phase = getCurrentPhase(new Date(latest.periodStart), new Date(), latest.cycleLength);
-  const guidance = getPhaseGuidance(phase);
+  return prisma.cycleLog
+    .findFirst({ where: { userId: "demo" }, orderBy: { periodStart: "desc" } })
+    .then((latest) => {
+      if (!latest) {
+        return res.status(404).json({ error: "No cycle data logged yet" });
+      }
+      const phase = getCurrentPhase(new Date(latest.periodStart), new Date(), latest.cycleLength ?? undefined);
+      const guidance = getPhaseGuidance(phase);
 
-  res.json({
-    phase,
-    guidance,
-    disclaimer: "This is general wellness information only, not medical advice.",
-  });
+      return res.json({
+        phase,
+        guidance,
+        disclaimer: "This is general wellness information only, not medical advice.",
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to fetch current cycle phase", error);
+      return res.status(500).json({ error: "Failed to fetch current cycle phase" });
+    });
 });
 
 // Log symptoms
@@ -54,16 +93,49 @@ cycleRouter.post("/symptoms", (req, res) => {
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
   }
-  const symptom: Symptom = {
-    id: randomUUID(),
-    userId: "demo",
-    ...result.data,
-  };
-  symptoms.push(symptom);
-  res.status(201).json(symptom);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.symptom
+    .create({
+      data: {
+        userId: "demo",
+        date: new Date(result.data.date),
+        type: result.data.type,
+        severity: result.data.severity,
+      },
+    })
+    .then((created) =>
+      res.status(201).json({
+        ...created,
+        date: created.date.toISOString(),
+      })
+    )
+    .catch((error) => {
+      console.error("Failed to create symptom", error);
+      return res.status(500).json({ error: "Failed to create symptom" });
+    });
 });
 
 // Get all symptoms
 cycleRouter.get("/symptoms", (_req, res) => {
-  res.json(symptoms);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.symptom
+    .findMany({ where: { userId: "demo" }, orderBy: { date: "desc" } })
+    .then((rows) =>
+      res.json(
+        rows.map((r) => ({
+          ...r,
+          date: r.date.toISOString(),
+        }))
+      )
+    )
+    .catch((error) => {
+      console.error("Failed to fetch symptoms", error);
+      return res.status(500).json({ error: "Failed to fetch symptoms" });
+    });
 });

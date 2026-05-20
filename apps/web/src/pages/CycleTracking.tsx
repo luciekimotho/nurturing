@@ -16,6 +16,7 @@ export default function CycleTracking() {
   const [symptomType, setSymptomType] = useState('')
   const [symptomSeverity, setSymptomSeverity] = useState<1 | 2 | 3 | 4 | 5>(3)
   const [symptomErrors, setSymptomErrors] = useState<Record<string, string>>({})
+  const [requestError, setRequestError] = useState<string | null>(null)
   const [submittingCycle, setSubmittingCycle] = useState(false)
   const [submittingSymptom, setSubmittingSymptom] = useState(false)
 
@@ -28,9 +29,28 @@ export default function CycleTracking() {
 
   async function handleCycleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setRequestError(null)
+
+    if (!periodStart) {
+      setCycleErrors({ periodStart: 'Period start is required' })
+      return
+    }
+
+    const startDate = new Date(periodStart)
+    if (Number.isNaN(startDate.getTime())) {
+      setCycleErrors({ periodStart: 'Enter a valid period start date' })
+      return
+    }
+
+    const endDate = periodEnd ? new Date(periodEnd) : null
+    if (endDate && Number.isNaN(endDate.getTime())) {
+      setCycleErrors({ periodEnd: 'Enter a valid period end date' })
+      return
+    }
+
     const payload = {
-      periodStart: new Date(periodStart).toISOString(),
-      periodEnd: periodEnd ? new Date(periodEnd).toISOString() : undefined,
+      periodStart: startDate.toISOString(),
+      periodEnd: endDate ? endDate.toISOString() : undefined,
     }
     const result = CycleLogSchema.safeParse(payload)
     if (!result.success) {
@@ -39,19 +59,32 @@ export default function CycleTracking() {
       return
     }
     setSubmittingCycle(true)
-    await fetch(`${API}/api/cycle`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    setPeriodStart('')
-    setPeriodEnd('')
-    await fetchAll()
-    setSubmittingCycle(false)
+    try {
+      const res = await fetch(`${API}/api/cycle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        setRequestError('Could not save cycle entry. Please try again.')
+        return
+      }
+
+      setPeriodStart('')
+      setPeriodEnd('')
+      setCycleErrors({})
+      await fetchAll()
+    } catch {
+      setRequestError('Network issue while saving cycle entry. Please try again.')
+    } finally {
+      setSubmittingCycle(false)
+    }
   }
 
   async function handleSymptomSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setRequestError(null)
     const payload = {
       date: new Date().toISOString(),
       type: symptomType,
@@ -64,15 +97,27 @@ export default function CycleTracking() {
       return
     }
     setSubmittingSymptom(true)
-    await fetch(`${API}/api/cycle/symptoms`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    setSymptomType('')
-    setSymptomSeverity(3)
-    await fetchAll()
-    setSubmittingSymptom(false)
+    try {
+      const res = await fetch(`${API}/api/cycle/symptoms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        setRequestError('Could not save symptom entry. Please try again.')
+        return
+      }
+
+      setSymptomType('')
+      setSymptomSeverity(3)
+      setSymptomErrors({})
+      await fetchAll()
+    } catch {
+      setRequestError('Network issue while saving symptom entry. Please try again.')
+    } finally {
+      setSubmittingSymptom(false)
+    }
   }
 
   return (
@@ -80,6 +125,7 @@ export default function CycleTracking() {
       <div>
         <h1 className="text-4xl font-semibold">Cycle Tracking</h1>
         <p className="text-[var(--muted)] text-sm mt-1">Log your period and symptoms.</p>
+        {requestError && <p className="text-sm text-red-600 mt-2">{requestError}</p>}
       </div>
 
       {/* Log period form */}
@@ -101,6 +147,7 @@ export default function CycleTracking() {
               value={periodEnd}
               onChange={setPeriodEnd}
             />
+            {cycleErrors.periodEnd && <p className="text-xs text-red-500 mt-1">{cycleErrors.periodEnd}</p>}
           </div>
         </div>
         <button

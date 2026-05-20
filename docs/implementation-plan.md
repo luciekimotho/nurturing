@@ -8,7 +8,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [x] Workspace folder created
 - [x] Phase 1 - Foundation complete (web + api scaffold, shared packages, tooling, initial repo setup)
 - [x] Phase 2 - Tracking MVP (initial) complete (food/workout/cycle/symptom flows + dashboard + phase display)
-- [ ] Phase 2 - Tracking MVP hardening in progress (persistence, auth, tests, API robustness)
+- [ ] Phase 2 - Tracking MVP hardening in progress (Prisma/Postgres persistence + API tests started; auth pending)
 - [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
 - [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
 - [ ] Phase 5 - Deployment and release not started (Render + TestFlight/App Store)
@@ -63,7 +63,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Food/workout/cycle/symptom CRUD
 - Dashboard with daily/weekly summaries
 - Phase calculation and display
-- Status: In progress (initial CRUD + dashboard + phase display done; API tests started; persistence/auth still pending)
+- Status: In progress (initial CRUD + dashboard + phase display done; Prisma/Postgres persistence + API tests started; auth still pending)
 
 3. AI Enablement
 - Azure integration for calorie estimation and recommendations

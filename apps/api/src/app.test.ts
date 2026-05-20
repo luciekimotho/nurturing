@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
 import app from "./app";
+import { DB_UNAVAILABLE_ERROR } from "./lib/prisma";
+
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
 test("GET /health returns ok payload", async () => {
   const res = await request(app).get("/health");
@@ -15,11 +18,27 @@ test("GET /health returns ok payload", async () => {
 test("GET /api/cycle/phase returns 404 when no cycle data", async () => {
   const res = await request(app).get("/api/cycle/phase");
 
+  if (!hasDatabaseUrl) {
+    assert.equal(res.status, 503);
+    assert.equal(res.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
   assert.equal(res.status, 404);
   assert.equal(res.body.error, "No cycle data logged yet");
 });
 
 test("POST /api/cycle then GET /api/cycle/phase returns phase and guidance", async () => {
+  if (!hasDatabaseUrl) {
+    const createRes = await request(app)
+      .post("/api/cycle")
+      .send({ periodStart: new Date().toISOString(), cycleLength: 28 });
+
+    assert.equal(createRes.status, 503);
+    assert.equal(createRes.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
   const periodStart = new Date().toISOString();
 
   const createRes = await request(app)

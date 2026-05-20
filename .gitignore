@@ -11,6 +11,9 @@ build/
 .env.local
 .env.*.local
 
+# Local infrastructure
+.local-postgres/
+
 # Logs
 *.log
 npm-debug.log*

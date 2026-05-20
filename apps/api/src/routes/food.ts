@@ -1,15 +1,28 @@
 import { Router } from "express";
 import { FoodLogSchema } from "@nurturing/schemas";
-import type { FoodLog } from "@nurturing/core";
-import { randomUUID } from "crypto";
+import { DB_UNAVAILABLE_ERROR, prisma } from "../lib/prisma";
 
 export const foodRouter = Router();
 
-// In-memory store for MVP — replace with DB in Phase 2
-const logs: FoodLog[] = [];
-
 foodRouter.get("/", (_req, res) => {
-  res.json(logs);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.foodLog
+    .findMany({ where: { userId: "demo" }, orderBy: { loggedAt: "desc" } })
+    .then((rows) =>
+      res.json(
+        rows.map((r) => ({
+          ...r,
+          loggedAt: r.loggedAt.toISOString(),
+        }))
+      )
+    )
+    .catch((error) => {
+      console.error("Failed to fetch food logs", error);
+      res.status(500).json({ error: "Failed to fetch food logs" });
+    });
 });
 
 foodRouter.post("/", (req, res) => {
@@ -17,18 +30,48 @@ foodRouter.post("/", (req, res) => {
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
   }
-  const log: FoodLog = {
-    id: randomUUID(),
-    userId: "demo", // replaced with auth in Phase 2
-    ...result.data,
-  };
-  logs.push(log);
-  res.status(201).json(log);
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.foodLog
+    .create({
+      data: {
+        userId: "demo",
+        name: result.data.name,
+        calories: result.data.calories,
+        protein: result.data.protein,
+        carbs: result.data.carbs,
+        fat: result.data.fat,
+        mealType: result.data.mealType,
+        loggedAt: new Date(result.data.loggedAt),
+      },
+    })
+    .then((created) =>
+      res.status(201).json({
+        ...created,
+        loggedAt: created.loggedAt.toISOString(),
+      })
+    )
+    .catch((error) => {
+      console.error("Failed to create food log", error);
+      res.status(500).json({ error: "Failed to create food log" });
+    });
 });
 
 foodRouter.delete("/:id", (req, res) => {
-  const index = logs.findIndex((l) => l.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: "Not found" });
-  logs.splice(index, 1);
-  res.status(204).send();
+  if (!prisma) {
+    return res.status(503).json(DB_UNAVAILABLE_ERROR);
+  }
+
+  return prisma.foodLog
+    .deleteMany({ where: { id: req.params.id, userId: "demo" } })
+    .then((result) => {
+      if (result.count === 0) return res.status(404).json({ error: "Not found" });
+      return res.status(204).send();
+    })
+    .catch((error) => {
+      console.error("Failed to delete food log", error);
+      res.status(500).json({ error: "Failed to delete food log" });
+    });
 });

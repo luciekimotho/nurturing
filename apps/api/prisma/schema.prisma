@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FoodLog {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  calories  Int
+  protein   Int?
+  carbs     Int?
+  fat       Int?
+  mealType  String
+  loggedAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, loggedAt])
+}
+
+model WorkoutLog {
+  id              String   @id @default(uuid())
+  userId          String
+  type            String
+  durationMinutes Int
+  intensityLevel  String
+  notes           String?
+  loggedAt        DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId, loggedAt])
+}
+
+model CycleLog {
+  id          String   @id @default(uuid())
+  userId      String
+  periodStart DateTime
+  periodEnd   DateTime?
+  cycleLength Int?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, periodStart])
+}
+
+model Symptom {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime
+  type      String
+  severity  Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
