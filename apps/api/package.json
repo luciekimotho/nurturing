@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "prebuild": "yarn prisma:generate",
     "build": "tsc",
     "start": "node dist/apps/api/src/index.js",
     "typecheck": "tsc --noEmit",
