@@ -6,15 +6,12 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [x] Product name finalized: Nurturing
 - [x] Package manager finalized: Yarn
 - [x] Workspace folder created
-- [ ] Monorepo scaffolded (web, mobile, api, shared packages)
-- [ ] Root scripts and workspace tooling configured
-- [ ] API starter endpoints implemented
-- [ ] Web starter app connected to API health endpoint
-- [ ] Mobile starter tabs/screens added
-- [ ] Shared core + schemas packages wired
-- [ ] Local compile and smoke tests passing
-- [ ] Render deployment configured (staging/prod)
-- [ ] iOS TestFlight build pipeline configured
+- [x] Phase 1 - Foundation complete (web + api scaffold, shared packages, tooling, initial repo setup)
+- [x] Phase 2 - Tracking MVP (initial) complete (food/workout/cycle/symptom flows + dashboard + phase display)
+- [ ] Phase 2 - Tracking MVP hardening in progress (persistence, auth, tests, API robustness)
+- [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
+- [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
+- [ ] Phase 5 - Deployment and release not started (Render + TestFlight/App Store)
 
 ## Architecture
 - apps/web: React + Vite + TypeScript + Tailwind
@@ -22,6 +19,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - apps/api: Node.js + Express + TypeScript
 - packages/core: shared types and cycle phase logic
 - packages/schemas: shared Zod schemas
+- Package manager: Yarn workspaces
 - Database: PostgreSQL
 - AI: Azure model APIs for calorie estimation and cycle-aware recommendations
 
@@ -59,25 +57,30 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Scaffold monorepo and tooling
 - Shared package contracts
 - Basic auth and environment setup
+- Status: In progress (scaffold/contracts done; auth pending)
 
 2. Tracking MVP
 - Food/workout/cycle/symptom CRUD
 - Dashboard with daily/weekly summaries
 - Phase calculation and display
+- Status: In progress (initial CRUD + dashboard + phase display done; persistence/auth/tests pending)
 
 3. AI Enablement
 - Azure integration for calorie estimation and recommendations
 - Confidence scoring + fallback behavior
+- Status: Not started
 
 4. Mobile iOS
 - Expo app aligned with web features
 - Camera upload for meal estimation
 - Device QA on iPhone
+- Status: Not started
 
 5. Deployment + Release
 - Render for web/api/postgres
 - CI/CD and migration workflow
 - TestFlight and App Store release flow
+- Status: Not started
 
 ## Deployment Checklist
 ### Render (Web + API)
@@ -102,5 +105,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 
 ## Working Method
 - Implement in thin vertical slices
+- Sequence by priority: web + API first, mobile after web stability
+- Run `yarn typecheck` before each commit
 - Keep all new work behind checkboxes in this file
 - Update status at the end of each implementation session

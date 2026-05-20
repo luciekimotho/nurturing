@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CycleLog, Symptom } from '@nurturing/core'
 import { CycleLogSchema, SymptomSchema } from '@nurturing/schemas'
+import DatePickerField from '../components/DatePickerField'
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
 
@@ -86,18 +87,19 @@ export default function CycleTracking() {
         <h2 className="text-xl font-medium">Log a period</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Period start *</label>
-            <input
-              type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)}
-              className="field"
+            <DatePickerField
+              label="Period start"
+              value={periodStart}
+              onChange={setPeriodStart}
+              required
             />
             {cycleErrors.periodStart && <p className="text-xs text-red-500 mt-1">{cycleErrors.periodStart}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Period end (optional)</label>
-            <input
-              type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)}
-              className="field"
+            <DatePickerField
+              label="Period end (optional)"
+              value={periodEnd}
+              onChange={setPeriodEnd}
             />
           </div>
         </div>

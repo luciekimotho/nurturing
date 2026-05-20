@@ -104,3 +104,23 @@ p {
     transform: translateY(0);
   }
 }
+
+.nurturing-datepicker .rdp {
+  --rdp-accent-color: var(--brand);
+  --rdp-background-color: var(--brand-soft);
+  margin: 0;
+}
+
+.nurturing-datepicker .rdp-month_caption {
+  font-family: var(--heading-font);
+  color: var(--ink);
+}
+
+.nurturing-datepicker .rdp-day_button {
+  border-radius: 10px;
+  font-size: 0.86rem;
+}
+
+.nurturing-datepicker .rdp-day_button:hover {
+  background: color-mix(in srgb, var(--brand-soft) 60%, white 40%);
+}
