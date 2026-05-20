@@ -9,7 +9,7 @@ services:
     name: nurturing-api
     runtime: node
     plan: free
-    buildCommand: yarn install --frozen-lockfile && yarn workspace @nurturing/api prisma:generate && yarn build:api
+    buildCommand: YARN_PRODUCTION=false yarn install --frozen-lockfile && yarn workspace @nurturing/api prisma:generate && yarn build:api
     startCommand: yarn workspace @nurturing/api migrate:deploy
     healthCheckPath: /health
     envVars:
