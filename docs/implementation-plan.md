@@ -63,7 +63,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Food/workout/cycle/symptom CRUD
 - Dashboard with daily/weekly summaries
 - Phase calculation and display
-- Status: In progress (initial CRUD + dashboard + phase display done; persistence/auth/tests pending)
+- Status: In progress (initial CRUD + dashboard + phase display done; API tests started; persistence/auth still pending)
 
 3. AI Enablement
 - Azure integration for calorie estimation and recommendations
@@ -96,6 +96,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [ ] TestFlight internal testing
 - [ ] App Privacy + disclaimer copy finalized
 - [ ] App Store submission
+- [ ] Wearables integration
 
 ## Guardrails
 - Guidance only; no medical diagnosis
