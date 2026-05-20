@@ -7,12 +7,14 @@ export const cycleRouter = Router();
 
 // Get all cycle logs
 cycleRouter.get("/", (_req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.cycleLog
-    .findMany({ where: { userId: "demo" }, orderBy: { periodStart: "desc" } })
+    .findMany({ where: { userId }, orderBy: { periodStart: "desc" } })
     .then((rows) =>
       res.json(
         rows.map((r) => ({
@@ -30,6 +32,8 @@ cycleRouter.get("/", (_req, res) => {
 
 // Log a new period start
 cycleRouter.post("/", (req, res) => {
+  const userId = res.locals.userId as string;
+
   const result = CycleLogSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
@@ -41,7 +45,7 @@ cycleRouter.post("/", (req, res) => {
   return prisma.cycleLog
     .create({
       data: {
-        userId: "demo",
+        userId,
         periodStart: new Date(result.data.periodStart),
         periodEnd: result.data.periodEnd ? new Date(result.data.periodEnd) : null,
         cycleLength: result.data.cycleLength,
@@ -62,12 +66,14 @@ cycleRouter.post("/", (req, res) => {
 
 // Get current phase + guidance based on most recent period start
 cycleRouter.get("/phase", (_req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.cycleLog
-    .findFirst({ where: { userId: "demo" }, orderBy: { periodStart: "desc" } })
+    .findFirst({ where: { userId }, orderBy: { periodStart: "desc" } })
     .then((latest) => {
       if (!latest) {
         return res.status(404).json({ error: "No cycle data logged yet" });
@@ -89,6 +95,8 @@ cycleRouter.get("/phase", (_req, res) => {
 
 // Log symptoms
 cycleRouter.post("/symptoms", (req, res) => {
+  const userId = res.locals.userId as string;
+
   const result = SymptomSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
@@ -100,7 +108,7 @@ cycleRouter.post("/symptoms", (req, res) => {
   return prisma.symptom
     .create({
       data: {
-        userId: "demo",
+        userId,
         date: new Date(result.data.date),
         type: result.data.type,
         severity: result.data.severity,
@@ -120,12 +128,14 @@ cycleRouter.post("/symptoms", (req, res) => {
 
 // Get all symptoms
 cycleRouter.get("/symptoms", (_req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.symptom
-    .findMany({ where: { userId: "demo" }, orderBy: { date: "desc" } })
+    .findMany({ where: { userId }, orderBy: { date: "desc" } })
     .then((rows) =>
       res.json(
         rows.map((r) => ({

@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CycleLog, Symptom } from '@nurturing/core'
 import { CycleLogSchema, SymptomSchema } from '@nurturing/schemas'
 import DatePickerField from '../components/DatePickerField'
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
+import { apiFetch } from '../lib/api'
 
 const commonSymptoms = ['Cramps', 'Bloating', 'Fatigue', 'Headache', 'Mood swings', 'Breast tenderness', 'Spotting', 'Back pain']
 
@@ -21,8 +20,8 @@ export default function CycleTracking() {
   const [submittingSymptom, setSubmittingSymptom] = useState(false)
 
   const fetchAll = () => Promise.all([
-    fetch(`${API}/api/cycle`).then((r) => r.json()).then(setCycleLogs),
-    fetch(`${API}/api/cycle/symptoms`).then((r) => r.json()).then(setSymptoms),
+    apiFetch('/api/cycle').then((r) => r.json()).then(setCycleLogs),
+    apiFetch('/api/cycle/symptoms').then((r) => r.json()).then(setSymptoms),
   ])
 
   useEffect(() => { fetchAll() }, [])
@@ -60,7 +59,7 @@ export default function CycleTracking() {
     }
     setSubmittingCycle(true)
     try {
-      const res = await fetch(`${API}/api/cycle`, {
+      const res = await apiFetch('/api/cycle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -98,7 +97,7 @@ export default function CycleTracking() {
     }
     setSubmittingSymptom(true)
     try {
-      const res = await fetch(`${API}/api/cycle/symptoms`, {
+      const res = await apiFetch('/api/cycle/symptoms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

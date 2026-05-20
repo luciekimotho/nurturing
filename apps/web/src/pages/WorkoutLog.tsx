@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { WorkoutLog } from '@nurturing/core'
 import { WorkoutLogSchema } from '@nurturing/schemas'
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
+import { apiFetch } from '../lib/api'
 
 const intensityLevels = ['low', 'moderate', 'high'] as const
 
@@ -21,7 +20,7 @@ export default function WorkoutLog() {
   const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchLogs = () =>
-    fetch(`${API}/api/workouts`)
+    apiFetch('/api/workouts')
       .then((r) => {
         if (!r.ok) throw new Error('Failed to load workout logs')
         return r.json()
@@ -56,7 +55,7 @@ export default function WorkoutLog() {
     }
     setSubmitting(true)
     try {
-      const res = await fetch(`${API}/api/workouts`, {
+      const res = await apiFetch('/api/workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -80,7 +79,7 @@ export default function WorkoutLog() {
   async function handleDelete(id: string) {
     setRequestError(null)
     try {
-      const res = await fetch(`${API}/api/workouts/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`/api/workouts/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         setRequestError('Could not delete workout. Please try again.')
         return

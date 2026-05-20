@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CyclePhase } from '@nurturing/core'
 import { getPhaseGuidance } from '@nurturing/core'
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
+import { apiFetch } from '../lib/api'
 
 const phaseColors: Record<CyclePhase, string> = {
   menstrual: 'bg-[#fff0eb] border-[#e8b7a6] text-[#7a3324]',
@@ -29,7 +28,7 @@ export default function Dashboard() {
   const [phaseError, setPhaseError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`${API}/api/cycle/phase`)
+    apiFetch('/api/cycle/phase')
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then(setPhaseData)
       .catch(() => setPhaseError('Log your first period to see your phase.'))

@@ -5,12 +5,14 @@ import { DB_UNAVAILABLE_ERROR, prisma } from "../lib/prisma";
 export const workoutRouter = Router();
 
 workoutRouter.get("/", (_req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.workoutLog
-    .findMany({ where: { userId: "demo" }, orderBy: { loggedAt: "desc" } })
+    .findMany({ where: { userId }, orderBy: { loggedAt: "desc" } })
     .then((rows) =>
       res.json(
         rows.map((r) => ({
@@ -26,6 +28,8 @@ workoutRouter.get("/", (_req, res) => {
 });
 
 workoutRouter.post("/", (req, res) => {
+  const userId = res.locals.userId as string;
+
   const result = WorkoutLogSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
@@ -37,7 +41,7 @@ workoutRouter.post("/", (req, res) => {
   return prisma.workoutLog
     .create({
       data: {
-        userId: "demo",
+        userId,
         type: result.data.type,
         durationMinutes: result.data.durationMinutes,
         intensityLevel: result.data.intensityLevel,
@@ -58,12 +62,14 @@ workoutRouter.post("/", (req, res) => {
 });
 
 workoutRouter.delete("/:id", (req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.workoutLog
-    .deleteMany({ where: { id: req.params.id, userId: "demo" } })
+    .deleteMany({ where: { id: req.params.id, userId } })
     .then((result) => {
       if (result.count === 0) return res.status(404).json({ error: "Not found" });
       return res.status(204).send();

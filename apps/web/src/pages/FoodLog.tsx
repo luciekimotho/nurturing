@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FoodLog } from '@nurturing/core'
 import { FoodLogSchema } from '@nurturing/schemas'
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
+import { apiFetch } from '../lib/api'
 
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'] as const
 
@@ -23,7 +22,7 @@ export default function FoodLog() {
   const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchLogs = () =>
-    fetch(`${API}/api/food`)
+    apiFetch('/api/food')
       .then((r) => {
         if (!r.ok) throw new Error('Failed to load food logs')
         return r.json()
@@ -60,7 +59,7 @@ export default function FoodLog() {
     }
     setSubmitting(true)
     try {
-      const res = await fetch(`${API}/api/food`, {
+      const res = await apiFetch('/api/food', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -84,7 +83,7 @@ export default function FoodLog() {
   async function handleDelete(id: string) {
     setRequestError(null)
     try {
-      const res = await fetch(`${API}/api/food/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`/api/food/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         setRequestError('Could not delete meal. Please try again.')
         return

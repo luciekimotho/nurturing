@@ -5,12 +5,14 @@ import { DB_UNAVAILABLE_ERROR, prisma } from "../lib/prisma";
 export const foodRouter = Router();
 
 foodRouter.get("/", (_req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.foodLog
-    .findMany({ where: { userId: "demo" }, orderBy: { loggedAt: "desc" } })
+    .findMany({ where: { userId }, orderBy: { loggedAt: "desc" } })
     .then((rows) =>
       res.json(
         rows.map((r) => ({
@@ -26,6 +28,8 @@ foodRouter.get("/", (_req, res) => {
 });
 
 foodRouter.post("/", (req, res) => {
+  const userId = res.locals.userId as string;
+
   const result = FoodLogSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ errors: result.error.flatten() });
@@ -37,7 +41,7 @@ foodRouter.post("/", (req, res) => {
   return prisma.foodLog
     .create({
       data: {
-        userId: "demo",
+        userId,
         name: result.data.name,
         calories: result.data.calories,
         protein: result.data.protein,
@@ -60,12 +64,14 @@ foodRouter.post("/", (req, res) => {
 });
 
 foodRouter.delete("/:id", (req, res) => {
+  const userId = res.locals.userId as string;
+
   if (!prisma) {
     return res.status(503).json(DB_UNAVAILABLE_ERROR);
   }
 
   return prisma.foodLog
-    .deleteMany({ where: { id: req.params.id, userId: "demo" } })
+    .deleteMany({ where: { id: req.params.id, userId } })
     .then((result) => {
       if (result.count === 0) return res.status(404).json({ error: "Not found" });
       return res.status(204).send();

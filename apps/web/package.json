@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "@nurturing/core": "*",
     "@nurturing/schemas": "*",
     "date-fns": "^4.2.1",

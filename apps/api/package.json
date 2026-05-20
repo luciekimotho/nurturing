@@ -14,6 +14,7 @@
     "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.19",
     "@nurturing/core": "*",
     "@nurturing/schemas": "*",
     "@prisma/client": "6.14.0",
