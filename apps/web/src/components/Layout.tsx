@@ -3,36 +3,39 @@ import { SignedIn, UserButton } from '@clerk/clerk-react'
 import { isClerkAuth } from '../lib/auth'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-  { to: '/food', label: 'Food', icon: '🥗' },
-  { to: '/workouts', label: 'Workouts', icon: '💪' },
-  { to: '/cycle', label: 'Cycle', icon: '🌙' },
+  { to: '/dashboard', label: 'Home' },
+  { to: '/food', label: 'Food' },
+  { to: '/workouts', label: 'Move' },
+  { to: '/cycle', label: 'Cycle' },
 ]
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col page-enter relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_20%,rgba(182,73,47,0.16)_0,transparent_36%),radial-gradient(circle_at_78%_24%,rgba(31,106,88,0.18)_0,transparent_30%)]" />
+    <div className="min-h-screen flex flex-col page-enter relative overflow-hidden app-shell">
+      <div className="grain" />
+      <div className="pointer-events-none absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_22%_18%,rgba(184,111,77,0.22)_0,transparent_38%),radial-gradient(circle_at_82%_18%,rgba(186,156,109,0.3)_0,transparent_35%)]" />
       {/* Top nav */}
-      <header className="sticky top-0 z-10 backdrop-blur-sm border-b border-[var(--line)]/70 bg-[#f8f2e8]/85">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <span className="font-semibold text-[var(--ink)] text-2xl tracking-tight [font-family:var(--heading-font)]">Nurturing</span>
+      <header className="sticky top-0 z-20 backdrop-blur-sm border-b border-[var(--line)]/80 bg-[#f8efe3]/85">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-[var(--ink)] text-2xl tracking-tight [font-family:var(--heading-font)]">Nurturing</p>
+            <p className="text-[11px] text-[var(--muted)] uppercase tracking-[0.18em]">Daily rhythm companion</p>
+          </div>
           <div className="flex items-center gap-2">
-            <nav className="flex gap-1 p-1 rounded-xl bg-white/65 border border-[var(--line)]">
-              {navItems.map(({ to, label, icon }) => (
+            <nav className="flex gap-1.5 p-1 rounded-2xl bg-white/70 border border-[var(--line)] shadow-[0_8px_22px_-18px_rgba(94,56,32,0.6)]">
+              {navItems.map(({ to, label }) => (
                 <NavLink
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    `flex items-center px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
                       isActive
-                        ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
-                        : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[#f1e7d8]'
+                        ? 'bg-[var(--brand-soft)] text-[var(--brand-strong)]'
+                        : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[#f1e3d4]'
                     }`
                   }
                 >
-                  <span>{icon}</span>
-                  <span className="hidden sm:inline">{label}</span>
+                  <span>{label}</span>
                 </NavLink>
               ))}
             </nav>
@@ -46,7 +49,7 @@ export default function Layout() {
       </header>
 
       {/* Page content */}
-      <main className="relative z-1 flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+      <main className="relative z-10 flex-1 max-w-5xl mx-auto w-full px-4 py-8">
         <Outlet />
       </main>
     </div>

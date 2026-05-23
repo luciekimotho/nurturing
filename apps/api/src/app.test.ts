@@ -62,6 +62,64 @@ test("POST /api/cycle then GET /api/cycle/phase returns phase and guidance", asy
   assert.ok(Array.isArray(phaseRes.body.guidance.workoutFocus));
 });
 
+test("PATCH /api/cycle/:id updates an existing cycle log", async () => {
+  const authHeaders = { "x-user-id": "test-cycle-update-user" };
+
+  const createRes = await request(app)
+    .post("/api/cycle")
+    .set(authHeaders)
+    .send({ periodStart: new Date("2026-05-01T00:00:00.000Z").toISOString() });
+
+  if (!hasDatabaseUrl) {
+    assert.equal(createRes.status, 503);
+    assert.equal(createRes.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(createRes.status, 201);
+
+  const patchRes = await request(app)
+    .patch(`/api/cycle/${createRes.body.id}`)
+    .set(authHeaders)
+    .send({
+      periodStart: new Date("2026-05-02T00:00:00.000Z").toISOString(),
+      periodEnd: new Date("2026-05-06T00:00:00.000Z").toISOString(),
+    });
+
+  assert.equal(patchRes.status, 200);
+  assert.equal(typeof patchRes.body.id, "string");
+  assert.ok(patchRes.body.periodStart.startsWith("2026-05-02"));
+  assert.ok(patchRes.body.periodEnd.startsWith("2026-05-06"));
+});
+
+test("DELETE /api/cycle/:id removes an existing cycle log", async () => {
+  const authHeaders = { "x-user-id": "test-cycle-delete-user" };
+
+  const createRes = await request(app)
+    .post("/api/cycle")
+    .set(authHeaders)
+    .send({ periodStart: new Date("2026-05-03T00:00:00.000Z").toISOString() });
+
+  if (!hasDatabaseUrl) {
+    assert.equal(createRes.status, 503);
+    assert.equal(createRes.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(createRes.status, 201);
+
+  const deleteRes = await request(app)
+    .delete(`/api/cycle/${createRes.body.id}`)
+    .set(authHeaders);
+
+  assert.equal(deleteRes.status, 204);
+
+  const listRes = await request(app).get("/api/cycle").set(authHeaders);
+  assert.equal(listRes.status, 200);
+  assert.equal(Array.isArray(listRes.body), true);
+  assert.equal(listRes.body.some((log: { id: string }) => log.id === createRes.body.id), false);
+});
+
 test("GET /api/cycle/phase rejects missing user header", async () => {
   const res = await request(app).get("/api/cycle/phase");
 

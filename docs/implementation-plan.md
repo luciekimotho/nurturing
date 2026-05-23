@@ -14,7 +14,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
 - [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
 - [ ] Phase 5 - Deployment and release in progress (Render setup checklist pending)
-- [ ] Phase 6 - UX research and improvement not started (rethink data input flows for food, workout, and cycle tracking)
+- [ ] Phase 6 - UX research and improvement in progress (brown-first visual system and calendar-centric interaction model started on web)
 
 ## Architecture
 - apps/web: React + Vite + TypeScript + Tailwind
@@ -100,7 +100,20 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Research how leading fitness, food tracking, and period apps handle input UX (e.g. quick-add patterns, inline pickers, swipe gestures, visual selectors)
 - Identify friction points and define improved interaction patterns
 - Redesign and rebuild input flows for web (and later mobile) based on findings
-- Status: Not started
+- Current design direction (from references):
+  - Warm brown and cream palette as the primary emotional tone
+  - Calendar-first UI with pill/day chips and highly legible date states
+  - Rounded card surfaces with soft gradients and low-contrast depth
+  - Friendly, editorial typography with strong hierarchy on headings
+  - Quick symptom chips and low-friction logging interactions
+- Next UX work items:
+  - [x] Apply warm brown design tokens and atmospheric background to web shell
+  - [x] Restyle cycle date pickers and calendar panel to a card-based, pill-day system
+  - [x] Introduce dashboard day-strip + phase hero to improve orientation at a glance
+  - [ ] Unify food/workout list cards into the same visual language (tag chips + stronger scan pattern)
+  - [ ] Add interaction polish (staggered reveals, pressed states, keyboard focus tuning)
+  - [ ] Run usability pass on mobile breakpoints and tune spacing/targets
+- Status: In progress
 
 ## Deployment Checklist
 ### Render (Web + API)
