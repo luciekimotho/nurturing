@@ -13,8 +13,8 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [x] Workout logging robustness update complete (notes optional save path fixed and covered by API test)
 - [ ] Phase 3 - AI enablement not started (Azure calorie estimation + phase-aware recommendations)
 - [ ] Phase 4 - Mobile iOS not started (Expo app aligned with web flows)
-- [ ] Phase 5 - Deployment and release in progress (Render setup checklist pending)
-- [ ] Phase 6 - UX research and improvement in progress (brown-first visual system and calendar-centric interaction model started on web)
+- [x] Phase 5 - Deployment and release complete (web app live on Render)
+- [ ] Phase 6 - UX research and improvement in progress (brown-first visual system and calendar-centric model advanced with unified phase ring + in-panel symptom logging)
 
 ## Architecture
 - apps/web: React + Vite + TypeScript + Tailwind
@@ -93,7 +93,7 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - Render for web/api/postgres
 - CI/CD and migration workflow
 - TestFlight and App Store release flow
-- Status: In progress (auth-ready app and deployment checklist prepared; infra rollout pending)
+- Status: Complete for web/API deployment (app live). Mobile/TestFlight/App Store release flow remains under iOS track.
 
 6. UX Research + Improvement
 - Audit current data input flows (food logging, workout logging, cycle/symptom entry)
@@ -110,9 +110,14 @@ Project goal: Build a health system across web + iPhone app to track food, worko
   - [x] Apply warm brown design tokens and atmospheric background to web shell
   - [x] Restyle cycle date pickers and calendar panel to a card-based, pill-day system
   - [x] Introduce dashboard day-strip + phase hero to improve orientation at a glance
+  - [x] Unify phase ring content into reusable `PhaseRing` component (shared date/phase/icon center stack)
+  - [x] Replace menstrual/ovulatory emoji with brand-colored custom icons for visual consistency
+  - [x] Move symptom logging into the calendar panel and simplify to quick-log-first flow
+  - [x] Place period logging controls immediately beside the calendar for tighter interaction flow
   - [ ] Unify food/workout list cards into the same visual language (tag chips + stronger scan pattern)
-  - [ ] Add interaction polish (staggered reveals, pressed states, keyboard focus tuning)
+  - [ ] Add interaction polish (pressed states, keyboard focus tuning, inline save affordances)
   - [ ] Run usability pass on mobile breakpoints and tune spacing/targets
+  - [ ] Evaluate one-tap symptom logging with undo for fastest daily entry
 - Status: In progress
 
 ## Deployment Checklist
@@ -120,11 +125,11 @@ Project goal: Build a health system across web + iPhone app to track food, worko
 - [x] Create `render.yaml` Blueprint (web static + api web service + postgres database defined)
 - [x] Fix API `start` script to correct compiled output path (`dist/apps/api/src/index.js`)
 - [x] Wire `prisma migrate deploy` into API start so migrations run on every deploy
-- [ ] Create services on Render dashboard using Blueprint (connect GitHub repo → New Blueprint)
-- [ ] Set secret env vars in Render dashboard: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_URL` (set to deployed API URL)
-- [ ] Trigger first deploy and verify `/health` endpoint responds
-- [ ] Smoke test all four flows (food, workout, cycle, symptom) on staging URL
-- [ ] Promote to production after smoke tests pass
+- [x] Create services on Render dashboard using Blueprint (connect GitHub repo → New Blueprint)
+- [x] Set secret env vars in Render dashboard: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_URL` (set to deployed API URL)
+- [x] Trigger first deploy and verify `/health` endpoint responds
+- [x] Smoke test all four flows (food, workout, cycle, symptom) on staging URL
+- [x] Promote to production after smoke tests pass
 
 ### iOS (Expo + Apple)
 - [ ] Apple Developer/App Store Connect setup
