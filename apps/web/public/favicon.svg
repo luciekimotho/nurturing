@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nurturing icon">
-	<circle cx="32" cy="32" r="30" fill="#f5efe2" />
-	<path d="M32 14c-9 0-16 7.2-16 16.1c0 12.6 14.1 19.8 15.2 20.3c0.5 0.2 1.1 0.2 1.6 0C33.9 49.9 48 42.7 48 30.1C48 21.2 41 14 32 14z" fill="#2f6f55"/>
-	<circle cx="32" cy="29" r="6.2" fill="#f5efe2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nurturing N icon">
+	<defs>
+		<linearGradient id="nurturingBg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+			<stop offset="0" stop-color="#c98360" />
+			<stop offset="1" stop-color="#8d4e32" />
+		</linearGradient>
+	</defs>
+	<rect x="4" y="4" width="56" height="56" rx="14" fill="url(#nurturingBg)" />
+	<path d="M20 46V18h7l17 18V18h6v28h-6L26 27v19z" fill="#fff8f0" />
 </svg>

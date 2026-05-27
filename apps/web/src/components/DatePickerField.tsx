@@ -42,20 +42,27 @@ export default function DatePickerField({
         <span className={value ? 'text-[var(--ink)]' : 'text-[var(--muted)]'}>
           {value ? format(parse(value, 'yyyy-MM-dd', new Date()), 'EEE, MMM d, yyyy') : placeholder}
         </span>
-        <span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-white text-xs">Cal</span>
+        <span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--muted)]">
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="5" width="18" height="16" rx="3" />
+            <path d="M16 3v4M8 3v4M3 10h18" />
+          </svg>
+        </span>
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-2 panel rounded-2xl p-3 nurturing-datepicker w-[300px] max-w-[92vw]">
-          <DayPicker
-            mode="single"
-            selected={selected}
-            onSelect={(day) => {
-              if (!day) return
-              onChange(format(day, 'yyyy-MM-dd'))
-              setOpen(false)
-            }}
-          />
+        <div className="absolute right-0 z-20 mt-2 panel rounded-2xl p-3 nurturing-datepicker w-[min(320px,calc(100vw-1rem))]">
+          <div className="flex justify-center">
+            <DayPicker
+              mode="single"
+              selected={selected}
+              onSelect={(day) => {
+                if (!day) return
+                onChange(format(day, 'yyyy-MM-dd'))
+                setOpen(false)
+              }}
+            />
+          </div>
           <div className="mt-2 flex justify-between">
             <button
               type="button"

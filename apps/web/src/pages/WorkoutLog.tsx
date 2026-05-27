@@ -2,32 +2,53 @@ import { useEffect, useState } from 'react'
 import type { WorkoutLog } from '@nurturing/core'
 import { WorkoutLogSchema } from '@nurturing/schemas'
 import { apiFetch } from '../lib/api'
+import DatePickerField from '../components/DatePickerField'
 
 const intensityLevels = ['low', 'moderate', 'high'] as const
+const workoutTypeOptions = [
+  'Walk',
+  'Jog',
+  'Run',
+  'Yoga',
+  'Pilates',
+  'Strength Training',
+  'HIIT',
+  'Cycling',
+  'Spin Class',
+  'Swimming',
+  'Dance Workout',
+  'Stretching',
+  'Mobility',
+  'Elliptical',
+  'Stair Climber',
+] as const
 
-const emptyForm = {
-  type: '',
-  durationMinutes: '',
-  intensityLevel: 'moderate' as typeof intensityLevels[number],
-  notes: '',
+function toInputDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-type WorkoutSuggestion = {
-  label: string
-  popularityScore: number
-  intensityHint: string | null
+function createEmptyForm() {
+  return {
+    type: workoutTypeOptions[0],
+    durationMinutes: '',
+    intensityLevel: 'moderate' as typeof intensityLevels[number],
+    notes: '',
+    loggedAt: toInputDate(new Date()),
+  }
 }
 
 export default function WorkoutLog() {
   const [logs, setLogs] = useState<WorkoutLog[]>([])
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(createEmptyForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
-  const [suggestions, setSuggestions] = useState<WorkoutSuggestion[]>([])
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedType, setSelectedType] = useState<string>('all')
+  const [visibleMonth, setVisibleMonth] = useState<Date | null>(null)
 
   const fetchLogs = () =>
     apiFetch('/api/workouts')
@@ -41,85 +62,44 @@ export default function WorkoutLog() {
   useEffect(() => { fetchLogs() }, [])
 
   useEffect(() => {
-    const query = form.type.trim()
+    if (visibleMonth || logs.length === 0) return
 
-    if (query.length < 2) {
-      setSuggestions([])
-      setSuggestionsLoading(false)
-      return
-    }
+    const latest = new Date(logs[0].loggedAt)
+    setVisibleMonth(new Date(latest.getFullYear(), latest.getMonth(), 1))
+  }, [logs, visibleMonth])
 
-    const controller = new AbortController()
-    setSuggestionsLoading(true)
+  const monthFormatter = new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  })
 
-    const timeoutId = window.setTimeout(() => {
-      apiFetch(`/api/workouts/suggestions?q=${encodeURIComponent(query)}&limit=8`, {
-        signal: controller.signal,
-      })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data: WorkoutSuggestion[]) => setSuggestions(data))
-        .catch(() => {
-          if (!controller.signal.aborted) {
-            setSuggestions([])
-          }
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) {
-            setSuggestionsLoading(false)
-          }
-        })
-    }, 200)
+  const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 
-    return () => {
-      controller.abort()
-      window.clearTimeout(timeoutId)
-    }
-  }, [form.type])
+  const workoutTypes = Array.from(new Set(logs.map((log) => log.type.trim()).filter(Boolean)))
+  const activeMonth = visibleMonth ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
-  const query = form.type.trim().toLowerCase()
-  const fallbackSuggestions = Array.from(
-    new Map(
-      logs
-        .filter((log) => log.type.toLowerCase().includes(query))
-        .map((log) => [log.type.toLowerCase(), { label: log.type, popularityScore: 0, intensityHint: log.intensityLevel }]),
-    ).values(),
-  ).slice(0, 8)
+  const typeFilteredLogs = selectedType === 'all'
+    ? logs
+    : logs.filter((log) => log.type.toLowerCase() === selectedType.toLowerCase())
 
-  const visibleSuggestions = suggestions.length > 0 ? suggestions : fallbackSuggestions
+  const visibleLogs = typeFilteredLogs.filter((log) => {
+    const date = new Date(log.loggedAt)
+    return date.getFullYear() === activeMonth.getFullYear() && date.getMonth() === activeMonth.getMonth()
+  })
 
-  function applySuggestion(suggestion: WorkoutSuggestion) {
-    setForm((prev) => {
-      const next = { ...prev, type: suggestion.label }
-
-      if (suggestion.intensityHint && intensityLevels.includes(suggestion.intensityHint as typeof intensityLevels[number])) {
-        next.intensityLevel = suggestion.intensityHint as typeof intensityLevels[number]
-      }
-
-      return next
+  function shiftMonth(offset: number) {
+    setVisibleMonth((prev) => {
+      const base = prev ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      return new Date(base.getFullYear(), base.getMonth() + offset, 1)
     })
-    setErrors((err) => ({ ...err, type: '' }))
-    setShowSuggestions(false)
   }
 
-  const totalMinutes = logs.reduce((sum, l) => sum + l.durationMinutes, 0)
-
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    setForm((f) => {
-      const next = { ...f, [e.target.name]: e.target.value }
-
-      if (e.target.name === 'type') {
-        setShowSuggestions(true)
-        const matchedSuggestion = suggestions.find(
-          (suggestion) => suggestion.label.toLowerCase() === e.target.value.trim().toLowerCase(),
-        )
-
-        if (matchedSuggestion?.intensityHint && intensityLevels.includes(matchedSuggestion.intensityHint as typeof intensityLevels[number])) {
-          next.intensityLevel = matchedSuggestion.intensityHint as typeof intensityLevels[number]
-        }
-      }
-
-      return next
-    })
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
     setErrors((err) => ({ ...err, [e.target.name]: '' }))
   }
 
@@ -131,7 +111,7 @@ export default function WorkoutLog() {
       durationMinutes: Number(form.durationMinutes),
       intensityLevel: form.intensityLevel,
       notes: form.notes || undefined,
-      loggedAt: new Date().toISOString(),
+      loggedAt: form.loggedAt ? new Date(`${form.loggedAt}T12:00:00`).toISOString() : new Date().toISOString(),
     }
     const result = WorkoutLogSchema.safeParse(payload)
     if (!result.success) {
@@ -152,7 +132,7 @@ export default function WorkoutLog() {
         return
       }
 
-      setForm(emptyForm)
+      setForm(createEmptyForm())
       setErrors({})
       setSavedMessage('Workout saved')
       await fetchLogs()
@@ -183,9 +163,6 @@ export default function WorkoutLog() {
     <div className="space-y-6 page-enter">
       <div>
         <h1 className="text-4xl font-semibold">Workouts</h1>
-        {logs.length > 0 && (
-          <p className="text-[var(--muted)] text-sm mt-1">{totalMinutes} min logged</p>
-        )}
         {requestError && <p className="text-sm text-red-600 mt-2">{requestError}</p>}
       </div>
 
@@ -193,35 +170,19 @@ export default function WorkoutLog() {
       <form onSubmit={handleSubmit} className="panel p-4 sm:p-5 space-y-4">
         <h2 className="text-xl font-medium">Log a workout</h2>
 
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-4 gap-3">
           <div className="sm:col-span-1">
             <label className="block text-xs font-medium text-[var(--muted)] mb-1">Workout type *</label>
-            <input
-              name="type" value={form.type} onChange={handleChange}
-              placeholder="e.g. Running, Yoga"
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
-              autoComplete="off"
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
               className="field"
-            />
-            {showSuggestions && query.length >= 2 && visibleSuggestions.length > 0 && (
-              <div className="mt-2 border border-[var(--line)] rounded-xl bg-white/95 shadow-sm overflow-hidden">
-                {visibleSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.label}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      applySuggestion(suggestion)
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5f2ea]"
-                  >
-                    {suggestion.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {suggestionsLoading && <p className="text-xs text-[var(--muted)] mt-1">Loading suggestions…</p>}
+            >
+              {workoutTypeOptions.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
             {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type}</p>}
           </div>
 
@@ -244,6 +205,13 @@ export default function WorkoutLog() {
               {intensityLevels.map((i) => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
+
+          <DatePickerField
+            label="Date"
+            value={form.loggedAt}
+            onChange={(value) => setForm((f) => ({ ...f, loggedAt: value }))}
+            placeholder="Today"
+          />
         </div>
 
         <div>
@@ -271,20 +239,69 @@ export default function WorkoutLog() {
       {logs.length === 0 ? (
         <p className="text-[var(--muted)] text-sm text-center py-8">No workouts logged yet.</p>
       ) : (
-        <div className="log-list">
-          {logs.map((log) => (
-            <div key={log.id} className="log-item">
-              <div className="log-item-head">
-                <p className="log-item-title">{log.type}</p>
-                <button onClick={() => handleDelete(log.id)} className="log-delete-btn" aria-label={`Delete ${log.type}`}>×</button>
-              </div>
-              <div className="log-item-chips">
-                <span className="log-chip is-highlight">{intensityLabel[log.intensityLevel]}</span>
-                <span className="log-chip">{log.durationMinutes} min</span>
-                {log.notes && <span className="log-chip">{log.notes}</span>}
-              </div>
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedType('all')}
+              className={`filter-pill ${selectedType === 'all' ? 'is-active' : ''}`}
+            >
+              All
+            </button>
+            {workoutTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSelectedType(type)}
+                className={`filter-pill ${selectedType.toLowerCase() === type.toLowerCase() ? 'is-active' : ''}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => shiftMonth(-1)}
+                className="log-chip"
+                aria-label="Previous month"
+              >
+                Prev
+              </button>
+              <h2 className="text-2xl font-semibold">{monthFormatter.format(activeMonth)}</h2>
+              <button
+                type="button"
+                onClick={() => shiftMonth(1)}
+                className="log-chip"
+                aria-label="Next month"
+              >
+                Next
+              </button>
             </div>
-          ))}
+
+            {visibleLogs.length === 0 ? (
+              <p className="text-[var(--muted)] text-sm">No workouts found for this month and filter.</p>
+            ) : (
+              <div className="log-list">
+                {visibleLogs.map((log) => (
+                  <div key={log.id} className="log-item">
+                    <div className="log-item-head">
+                      <p className="log-item-title">{log.type}</p>
+                      <button onClick={() => handleDelete(log.id)} className="log-delete-btn" aria-label={`Delete ${log.type}`}>×</button>
+                    </div>
+                    <div className="log-item-chips">
+                      <span className="log-chip is-highlight">{intensityLabel[log.intensityLevel]}</span>
+                      <span className="log-chip">{log.durationMinutes} min</span>
+                      {log.notes && <span className="log-chip">{log.notes}</span>}
+                      <span className="log-chip">{dateFormatter.format(new Date(log.loggedAt))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>

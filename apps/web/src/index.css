@@ -358,6 +358,33 @@ p {
   background: color-mix(in srgb, var(--brand-soft) 45%, white 55%);
 }
 
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff8f0;
+  padding: 0.58rem 1.18rem;
+  min-height: 2.8rem;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.filter-pill:hover {
+  border-color: color-mix(in srgb, var(--brand) 35%, white 65%);
+  background: color-mix(in srgb, var(--brand-soft) 26%, white 74%);
+}
+
+.filter-pill.is-active {
+  border-color: color-mix(in srgb, var(--brand) 60%, white 40%);
+  background: color-mix(in srgb, var(--brand-soft) 70%, white 30%);
+  color: var(--brand-strong);
+}
+
 .log-delete-btn {
   border: 0;
   border-radius: 999px;

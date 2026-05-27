@@ -2,16 +2,27 @@ import { useEffect, useState } from 'react'
 import type { FoodLog } from '@nurturing/core'
 import { FoodLogSchema } from '@nurturing/schemas'
 import { apiFetch } from '../lib/api'
+import DatePickerField from '../components/DatePickerField'
 
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'] as const
 
-const emptyForm = {
-  name: '',
-  calories: '',
-  protein: '',
-  carbs: '',
-  fat: '',
-  mealType: 'breakfast' as typeof mealTypes[number],
+function toInputDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function createEmptyForm() {
+  return {
+    name: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: '',
+    mealType: 'breakfast' as typeof mealTypes[number],
+    loggedAt: toInputDate(new Date()),
+  }
 }
 
 type FoodSuggestion = {
@@ -22,7 +33,7 @@ type FoodSuggestion = {
 
 export default function FoodLog() {
   const [logs, setLogs] = useState<FoodLog[]>([])
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(createEmptyForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
@@ -30,6 +41,8 @@ export default function FoodLog() {
   const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([])
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedMealType, setSelectedMealType] = useState<string>('all')
+  const [visibleMonth, setVisibleMonth] = useState<Date | null>(null)
 
   const fetchLogs = () =>
     apiFetch('/api/food')
@@ -41,6 +54,13 @@ export default function FoodLog() {
       .catch(() => setRequestError('Could not load food logs. Check API connection.'))
 
   useEffect(() => { fetchLogs() }, [])
+
+  useEffect(() => {
+    if (visibleMonth || logs.length === 0) return
+
+    const latest = new Date(logs[0].loggedAt)
+    setVisibleMonth(new Date(latest.getFullYear(), latest.getMonth(), 1))
+  }, [logs, visibleMonth])
 
   useEffect(() => {
     const query = form.name.trim()
@@ -103,7 +123,35 @@ export default function FoodLog() {
     setShowSuggestions(false)
   }
 
-  const totalCalories = logs.reduce((sum, l) => sum + l.calories, 0)
+  const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+
+  const monthFormatter = new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  })
+
+  const mealTypesInLogs = Array.from(new Set(logs.map((log) => log.mealType.trim()).filter(Boolean)))
+  const activeMonth = visibleMonth ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+
+  const typeFilteredLogs = selectedMealType === 'all'
+    ? logs
+    : logs.filter((log) => log.mealType.toLowerCase() === selectedMealType.toLowerCase())
+
+  const visibleLogs = typeFilteredLogs.filter((log) => {
+    const date = new Date(log.loggedAt)
+    return date.getFullYear() === activeMonth.getFullYear() && date.getMonth() === activeMonth.getMonth()
+  })
+
+  function shiftMonth(offset: number) {
+    setVisibleMonth((prev) => {
+      const base = prev ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      return new Date(base.getFullYear(), base.getMonth() + offset, 1)
+    })
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((f) => {
@@ -135,7 +183,7 @@ export default function FoodLog() {
       carbs: form.carbs ? Number(form.carbs) : undefined,
       fat: form.fat ? Number(form.fat) : undefined,
       mealType: form.mealType,
-      loggedAt: new Date().toISOString(),
+      loggedAt: form.loggedAt ? new Date(`${form.loggedAt}T12:00:00`).toISOString() : new Date().toISOString(),
     }
     const result = FoodLogSchema.safeParse(payload)
     if (!result.success) {
@@ -156,7 +204,7 @@ export default function FoodLog() {
         return
       }
 
-      setForm(emptyForm)
+      setForm(createEmptyForm())
       setErrors({})
       setSavedMessage('Meal saved')
       await fetchLogs()
@@ -185,11 +233,6 @@ export default function FoodLog() {
     <div className="space-y-6 page-enter">
       <div>
         <h1 className="text-4xl font-semibold">Food Log</h1>
-        {logs.length > 0 && (
-          <p className="text-[var(--muted)] text-sm mt-1">
-            {totalCalories} kcal logged today
-          </p>
-        )}
         {requestError && <p className="text-sm text-red-600 mt-2">{requestError}</p>}
       </div>
 
@@ -197,7 +240,7 @@ export default function FoodLog() {
       <form onSubmit={handleSubmit} className="panel p-4 sm:p-5 space-y-4">
         <h2 className="text-xl font-medium">Add a meal</h2>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium text-[var(--muted)] mb-1">Food name *</label>
             <input
@@ -238,6 +281,13 @@ export default function FoodLog() {
               {mealTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
+
+          <DatePickerField
+            label="Date"
+            value={form.loggedAt}
+            onChange={(value) => setForm((f) => ({ ...f, loggedAt: value }))}
+            placeholder="Today"
+          />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -271,22 +321,71 @@ export default function FoodLog() {
       {logs.length === 0 ? (
         <p className="text-[var(--muted)] text-sm text-center py-8">No meals logged yet.</p>
       ) : (
-        <div className="log-list">
-          {logs.map((log) => (
-            <div key={log.id} className="log-item">
-              <div className="log-item-head">
-                <p className="log-item-title">{log.name}</p>
-                <button onClick={() => handleDelete(log.id)} className="log-delete-btn" aria-label={`Delete ${log.name}`}>×</button>
-              </div>
-              <div className="log-item-chips">
-                <span className="log-chip is-highlight capitalize">{log.mealType}</span>
-                <span className="log-chip">{log.calories} kcal</span>
-                {log.protein != null && <span className="log-chip">P {log.protein}g</span>}
-                {log.carbs != null && <span className="log-chip">C {log.carbs}g</span>}
-                {log.fat != null && <span className="log-chip">F {log.fat}g</span>}
-              </div>
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedMealType('all')}
+              className={`filter-pill ${selectedMealType === 'all' ? 'is-active' : ''}`}
+            >
+              All
+            </button>
+            {mealTypesInLogs.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSelectedMealType(type)}
+                className={`filter-pill ${selectedMealType.toLowerCase() === type.toLowerCase() ? 'is-active' : ''}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => shiftMonth(-1)}
+                className="log-chip"
+                aria-label="Previous month"
+              >
+                Prev
+              </button>
+              <h2 className="text-2xl font-semibold">{monthFormatter.format(activeMonth)}</h2>
+              <button
+                type="button"
+                onClick={() => shiftMonth(1)}
+                className="log-chip"
+                aria-label="Next month"
+              >
+                Next
+              </button>
             </div>
-          ))}
+
+            {visibleLogs.length === 0 ? (
+              <p className="text-[var(--muted)] text-sm">No meals found for this month and filter.</p>
+            ) : (
+              <div className="log-list">
+                {visibleLogs.map((log) => (
+                  <div key={log.id} className="log-item">
+                    <div className="log-item-head">
+                      <p className="log-item-title">{log.name}</p>
+                      <button onClick={() => handleDelete(log.id)} className="log-delete-btn" aria-label={`Delete ${log.name}`}>×</button>
+                    </div>
+                    <div className="log-item-chips">
+                      <span className="log-chip is-highlight capitalize">{log.mealType}</span>
+                      <span className="log-chip">{log.calories} kcal</span>
+                      {log.protein != null && <span className="log-chip">P {log.protein}g</span>}
+                      {log.carbs != null && <span className="log-chip">C {log.carbs}g</span>}
+                      {log.fat != null && <span className="log-chip">F {log.fat}g</span>}
+                      <span className="log-chip">{dateFormatter.format(new Date(log.loggedAt))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>
