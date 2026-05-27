@@ -150,3 +150,48 @@ test("POST /api/workouts saves when notes are omitted", async () => {
   assert.equal(createRes.body.type, "Walk");
   assert.equal(createRes.body.durationMinutes, 30);
 });
+
+test("GET /api/food/suggestions validates minimum query length", async () => {
+  const authHeaders = { "x-user-id": "test-food-suggestions-min-query" };
+  const res = await request(app).get("/api/food/suggestions?q=a").set(authHeaders);
+
+  if (!hasDatabaseUrl) {
+    assert.equal(res.status, 503);
+    assert.equal(res.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, "Query must be at least 2 characters");
+});
+
+test("GET /api/food/suggestions supports limit and prefix-first ordering", async () => {
+  const authHeaders = { "x-user-id": "test-food-suggestions-order" };
+  const res = await request(app).get("/api/food/suggestions?q=chi&limit=2").set(authHeaders);
+
+  if (!hasDatabaseUrl) {
+    assert.equal(res.status, 503);
+    assert.equal(res.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(res.status, 200);
+  assert.equal(Array.isArray(res.body), true);
+  assert.equal(res.body.length <= 2, true);
+  assert.equal(res.body.length > 0, true);
+  assert.equal(String(res.body[0].label).toLowerCase().startsWith("chi"), true);
+});
+
+test("GET /api/workouts/suggestions returns empty list when no match", async () => {
+  const authHeaders = { "x-user-id": "test-workout-suggestions-empty" };
+  const res = await request(app).get("/api/workouts/suggestions?q=zzzxq").set(authHeaders);
+
+  if (!hasDatabaseUrl) {
+    assert.equal(res.status, 503);
+    assert.equal(res.body.error, DB_UNAVAILABLE_ERROR.error);
+    return;
+  }
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, []);
+});

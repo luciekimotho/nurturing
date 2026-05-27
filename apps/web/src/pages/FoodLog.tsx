@@ -14,12 +14,22 @@ const emptyForm = {
   mealType: 'breakfast' as typeof mealTypes[number],
 }
 
+type FoodSuggestion = {
+  label: string
+  popularityScore: number
+  mealType: string | null
+}
+
 export default function FoodLog() {
   const [logs, setLogs] = useState<FoodLog[]>([])
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const fetchLogs = () =>
     apiFetch('/api/food')
@@ -32,10 +42,86 @@ export default function FoodLog() {
 
   useEffect(() => { fetchLogs() }, [])
 
+  useEffect(() => {
+    const query = form.name.trim()
+
+    if (query.length < 2) {
+      setSuggestions([])
+      setSuggestionsLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
+    setSuggestionsLoading(true)
+
+    const timeoutId = window.setTimeout(() => {
+      apiFetch(`/api/food/suggestions?q=${encodeURIComponent(query)}&limit=8`, {
+        signal: controller.signal,
+      })
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data: FoodSuggestion[]) => setSuggestions(data))
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setSuggestions([])
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setSuggestionsLoading(false)
+          }
+        })
+    }, 200)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(timeoutId)
+    }
+  }, [form.name])
+
+  const query = form.name.trim().toLowerCase()
+  const fallbackSuggestions = Array.from(
+    new Map(
+      logs
+        .filter((log) => log.name.toLowerCase().includes(query))
+        .map((log) => [log.name.toLowerCase(), { label: log.name, popularityScore: 0, mealType: log.mealType }]),
+    ).values(),
+  ).slice(0, 8)
+
+  const visibleSuggestions = suggestions.length > 0 ? suggestions : fallbackSuggestions
+
+  function applySuggestion(suggestion: FoodSuggestion) {
+    setForm((prev) => {
+      const next = { ...prev, name: suggestion.label }
+
+      if (suggestion.mealType && mealTypes.includes(suggestion.mealType as typeof mealTypes[number])) {
+        next.mealType = suggestion.mealType as typeof mealTypes[number]
+      }
+
+      return next
+    })
+    setErrors((err) => ({ ...err, name: '' }))
+    setShowSuggestions(false)
+  }
+
   const totalCalories = logs.reduce((sum, l) => sum + l.calories, 0)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+    setForm((f) => {
+      const next = { ...f, [e.target.name]: e.target.value }
+
+      if (e.target.name === 'name') {
+        setShowSuggestions(true)
+        const matchedSuggestion = suggestions.find(
+          (suggestion) => suggestion.label.toLowerCase() === e.target.value.trim().toLowerCase(),
+        )
+
+        if (matchedSuggestion?.mealType && mealTypes.includes(matchedSuggestion.mealType as typeof mealTypes[number])) {
+          next.mealType = matchedSuggestion.mealType as typeof mealTypes[number]
+        }
+      }
+
+      return next
+    })
     setErrors((err) => ({ ...err, [e.target.name]: '' }))
   }
 
@@ -72,6 +158,7 @@ export default function FoodLog() {
 
       setForm(emptyForm)
       setErrors({})
+      setSavedMessage('Meal saved')
       await fetchLogs()
     } catch {
       setRequestError('Network issue while saving meal. Please try again.')
@@ -107,7 +194,7 @@ export default function FoodLog() {
       </div>
 
       {/* Add food form */}
-      <form onSubmit={handleSubmit} className="panel p-5 space-y-4">
+      <form onSubmit={handleSubmit} className="panel p-4 sm:p-5 space-y-4">
         <h2 className="text-xl font-medium">Add a meal</h2>
 
         <div className="grid sm:grid-cols-2 gap-3">
@@ -116,8 +203,29 @@ export default function FoodLog() {
             <input
               name="name" value={form.name} onChange={handleChange}
               placeholder="e.g. Ugali with sukuma wiki"
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+              autoComplete="off"
               className="field"
             />
+            {showSuggestions && query.length >= 2 && visibleSuggestions.length > 0 && (
+              <div className="mt-2 border border-[var(--line)] rounded-xl bg-white/95 shadow-sm overflow-hidden">
+                {visibleSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.label}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      applySuggestion(suggestion)
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5f2ea]"
+                  >
+                    {suggestion.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {suggestionsLoading && <p className="text-xs text-[var(--muted)] mt-1">Loading suggestions…</p>}
             {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
           </div>
 
@@ -148,30 +256,35 @@ export default function FoodLog() {
           ))}
         </div>
 
-        <button
-          type="submit" disabled={submitting}
-          className="primary-btn w-full sm:w-auto"
-        >
-          {submitting ? 'Saving…' : 'Add meal'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="submit" disabled={submitting}
+            className="primary-btn w-full sm:w-auto"
+          >
+            {submitting ? 'Saving…' : 'Add meal'}
+          </button>
+          {savedMessage && <p className="text-xs font-medium text-[#2f6f55]">{savedMessage}</p>}
+        </div>
       </form>
 
       {/* Log list */}
       {logs.length === 0 ? (
         <p className="text-[var(--muted)] text-sm text-center py-8">No meals logged yet.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="log-list">
           {logs.map((log) => (
-            <div key={log.id} className="panel flex items-center justify-between rounded-xl px-4 py-3">
-              <div>
-                <p className="font-medium text-[var(--ink)] text-sm">{log.name}</p>
-                <p className="text-xs text-[var(--muted)] capitalize">{log.mealType} · {log.calories} kcal
-                  {log.protein != null && ` · P: ${log.protein}g`}
-                  {log.carbs != null && ` · C: ${log.carbs}g`}
-                  {log.fat != null && ` · F: ${log.fat}g`}
-                </p>
+            <div key={log.id} className="log-item">
+              <div className="log-item-head">
+                <p className="log-item-title">{log.name}</p>
+                <button onClick={() => handleDelete(log.id)} className="log-delete-btn" aria-label={`Delete ${log.name}`}>×</button>
               </div>
-              <button onClick={() => handleDelete(log.id)} className="text-[#b08f76] hover:text-[#8f2f1e] transition-colors text-lg leading-none">×</button>
+              <div className="log-item-chips">
+                <span className="log-chip is-highlight capitalize">{log.mealType}</span>
+                <span className="log-chip">{log.calories} kcal</span>
+                {log.protein != null && <span className="log-chip">P {log.protein}g</span>}
+                {log.carbs != null && <span className="log-chip">C {log.carbs}g</span>}
+                {log.fat != null && <span className="log-chip">F {log.fat}g</span>}
+              </div>
             </div>
           ))}
         </div>

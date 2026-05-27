@@ -114,10 +114,10 @@ Project goal: Build a health system across web + iPhone app to track food, worko
   - [x] Replace menstrual/ovulatory emoji with brand-colored custom icons for visual consistency
   - [x] Move symptom logging into the calendar panel and simplify to quick-log-first flow
   - [x] Place period logging controls immediately beside the calendar for tighter interaction flow
-  - [ ] Unify food/workout list cards into the same visual language (tag chips + stronger scan pattern)
-  - [ ] Add interaction polish (pressed states, keyboard focus tuning, inline save affordances)
-  - [ ] Run usability pass on mobile breakpoints and tune spacing/targets
-  - [ ] Evaluate one-tap symptom logging with undo for fastest daily entry
+  - [x] Unify food/workout list cards into the same visual language (tag chips + stronger scan pattern)
+  - [x] Add interaction polish (pressed states, keyboard focus tuning, inline save affordances)
+  - [x] Run usability pass on mobile breakpoints and tune spacing/targets
+  - [x] Evaluate one-tap symptom logging with undo for fastest daily entry
 - Status: In progress
 
 ## Deployment Checklist

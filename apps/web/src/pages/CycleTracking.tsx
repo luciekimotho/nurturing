@@ -57,6 +57,8 @@ export default function CycleTracking() {
   const [symptomErrors, setSymptomErrors] = useState<Record<string, string>>({})
   const [showCustomSymptom, setShowCustomSymptom] = useState(false)
   const [symptomSavedMessage, setSymptomSavedMessage] = useState<string | null>(null)
+  const [lastQuickLoggedSymptom, setLastQuickLoggedSymptom] = useState<{ id: string, label: string } | null>(null)
+  const [quickLoggingSymptom, setQuickLoggingSymptom] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
   const [submittingCycle, setSubmittingCycle] = useState(false)
   const [submittingSymptom, setSubmittingSymptom] = useState(false)
@@ -70,11 +72,98 @@ export default function CycleTracking() {
   useEffect(() => { fetchAll() }, [])
 
   useEffect(() => {
-    if (!symptomSavedMessage) return
+    if (!symptomSavedMessage || lastQuickLoggedSymptom) return
 
     const timer = setTimeout(() => setSymptomSavedMessage(null), 2200)
     return () => clearTimeout(timer)
-  }, [symptomSavedMessage])
+  }, [symptomSavedMessage, lastQuickLoggedSymptom])
+
+  useEffect(() => {
+    if (!lastQuickLoggedSymptom) return
+
+    const timer = setTimeout(() => {
+      setLastQuickLoggedSymptom(null)
+      setSymptomSavedMessage(null)
+    }, 4200)
+
+    return () => clearTimeout(timer)
+  }, [lastQuickLoggedSymptom])
+
+  async function submitSymptom(payload: { date: string, type: string, severity: 1 | 2 | 3 | 4 | 5 }) {
+    const result = SymptomSchema.safeParse(payload)
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors
+      setSymptomErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0] ?? ''])))
+      return null
+    }
+
+    const res = await apiFetch('/api/cycle/symptoms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      setRequestError('Could not save symptom entry. Please try again.')
+      return null
+    }
+
+    try {
+      return await res.json() as Symptom
+    } catch {
+      return null
+    }
+  }
+
+  async function handleQuickSymptomLog(type: string) {
+    if (submittingSymptom || quickLoggingSymptom) return
+
+    setRequestError(null)
+    setSymptomSavedMessage(null)
+    setLastQuickLoggedSymptom(null)
+    setQuickLoggingSymptom(type)
+
+    const selectedDateForLog = new Date(selectedDate)
+    selectedDateForLog.setHours(12, 0, 0, 0)
+
+    try {
+      const created = await submitSymptom({
+        date: selectedDateForLog.toISOString(),
+        type,
+        severity: symptomSeverity,
+      })
+
+      if (!created) return
+
+      setSymptomType('')
+      setSymptomErrors({})
+      setSymptomSavedMessage(`Saved ${type.toLowerCase()}`)
+      setLastQuickLoggedSymptom({ id: created.id, label: type })
+      await fetchAll()
+    } catch {
+      setRequestError('Network issue while saving symptom entry. Please try again.')
+    } finally {
+      setQuickLoggingSymptom(null)
+    }
+  }
+
+  async function handleUndoQuickSymptom() {
+    if (!lastQuickLoggedSymptom) return
+
+    try {
+      const res = await apiFetch(`/api/cycle/symptoms/${lastQuickLoggedSymptom.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setRequestError('Could not undo symptom entry. Please try again.')
+        return
+      }
+
+      setSymptomSavedMessage('Undid symptom entry')
+      setLastQuickLoggedSymptom(null)
+      await fetchAll()
+    } catch {
+      setRequestError('Network issue while undoing symptom entry.')
+    }
+  }
 
   const selectedDatePhase = useMemo(() => getCyclePhaseForDate(selectedDate, cycleLogs), [selectedDate, cycleLogs])
 
@@ -217,33 +306,21 @@ export default function CycleTracking() {
     e.preventDefault()
     setRequestError(null)
     setSymptomSavedMessage(null)
+    setLastQuickLoggedSymptom(null)
 
     const selectedDateForLog = new Date(selectedDate)
     selectedDateForLog.setHours(12, 0, 0, 0)
 
-    const payload = {
+    const payload: { date: string, type: string, severity: 1 | 2 | 3 | 4 | 5 } = {
       date: selectedDateForLog.toISOString(),
       type: symptomType,
       severity: symptomSeverity,
     }
-    const result = SymptomSchema.safeParse(payload)
-    if (!result.success) {
-      const flat = result.error.flatten().fieldErrors
-      setSymptomErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0] ?? ''])))
-      return
-    }
+
     setSubmittingSymptom(true)
     try {
-      const res = await apiFetch('/api/cycle/symptoms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        setRequestError('Could not save symptom entry. Please try again.')
-        return
-      }
+      const created = await submitSymptom(payload)
+      if (!created) return
 
       setSymptomType('')
       setSymptomSeverity(3)
@@ -414,17 +491,20 @@ export default function CycleTracking() {
                     onClick={() => {
                       setSymptomType(s)
                       setSymptomSavedMessage(null)
+                      setLastQuickLoggedSymptom(null)
                       if (symptomErrors.type) {
                         setSymptomErrors((prev) => ({ ...prev, type: '' }))
                       }
+                      void handleQuickSymptomLog(s)
                     }}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                       symptomType === s
                         ? 'bg-[var(--brand-soft)] border-[#cd8f70] text-[var(--brand-strong)]'
                         : 'border-[var(--line)] text-[var(--muted)] hover:border-[#cd8f70] hover:text-[var(--brand-strong)]'
                     }`}
+                    disabled={Boolean(quickLoggingSymptom) || submittingSymptom}
                   >
-                    {s}
+                    {quickLoggingSymptom === s ? 'Saving…' : s}
                   </button>
                 ))}
               </div>
@@ -468,6 +548,15 @@ export default function CycleTracking() {
                   {showCustomSymptom ? 'Hide custom' : 'Add custom symptom'}
                 </button>
                 {symptomSavedMessage && <p className="text-xs font-medium text-[#2f6f55]">{symptomSavedMessage}</p>}
+                {lastQuickLoggedSymptom && (
+                  <button
+                    type="button"
+                    onClick={() => void handleUndoQuickSymptom()}
+                    className="text-xs font-semibold rounded-full border border-[#c9a998] px-2.5 py-1 text-[#8d4e32] hover:bg-[#f7e5d9]"
+                  >
+                    Undo
+                  </button>
+                )}
               </div>
 
               {showCustomSymptom && (

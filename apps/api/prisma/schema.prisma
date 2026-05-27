@@ -22,6 +22,19 @@ model FoodLog {
   @@index([userId, loggedAt])
 }
 
+model FoodSuggestion {
+  id              String   @id @default(uuid())
+  label           String
+  normalizedLabel String   @unique
+  mealType        String?
+  popularityScore Int      @default(1)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active, popularityScore])
+}
+
 model WorkoutLog {
   id              String   @id @default(uuid())
   userId          String
@@ -33,6 +46,19 @@ model WorkoutLog {
   createdAt       DateTime @default(now())
 
   @@index([userId, loggedAt])
+}
+
+model WorkoutSuggestion {
+  id              String   @id @default(uuid())
+  label           String
+  normalizedLabel String   @unique
+  intensityHint   String?
+  popularityScore Int      @default(1)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active, popularityScore])
 }
 
 model CycleLog {
